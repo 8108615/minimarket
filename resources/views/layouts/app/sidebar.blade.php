@@ -36,6 +36,14 @@
                                 :current="request()->routeIs('admin.productos.*')" wire:navigate>Productos
                     </flux:navlist.item>
 
+                    <flux:navlist.item icon="truck" :href="route('admin.proveedores.index')"
+                        :current="request()->routeIs('admin.proveedores.*')" wire:navigate>Proveedores
+                    </flux:navlist.item>
+
+                    <flux:navlist.item icon="users" :href="route('admin.clientes.index')"
+                                :current="request()->routeIs('admin.clientes.*')" wire:navigate>Clientes
+                    </flux:navlist.item>
+
                 </flux:sidebar.group>
 
             </flux:sidebar.nav>

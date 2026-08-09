@@ -7,6 +7,9 @@ use App\Models\Categoria;
 use App\Models\Ajuste;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use App\Exports\ProductosExport;
+use Maatwebsite\Excel\Facades\Excel;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class ProductoController extends Controller
 {
@@ -38,14 +41,18 @@ class ProductoController extends Controller
         $productos = Producto::with('categoria')
             ->when($buscar, function ($query, $buscar) {
                 return $query->where('nombre', 'LIKE', "%{$buscar}%")
-                             ->orWhere('codigo', 'LIKE', "%{$buscar}%");
+                            ->orWhere('codigo', 'LIKE', "%{$buscar}%");
             })
             ->latest()
             ->paginate(10);
 
-        $simboloDivisa = $this->obtenerSimboloDivisa(); // Obtenemos el símbolo
+        // NUEVO: Obtenemos los productos cuyo stock es menor o igual al mínimo
+        $productosCriticos = Producto::whereColumn('stock', '<=', 'stock_minimo')->get();
 
-        return view('admin.productos.index', compact('productos', 'buscar', 'simboloDivisa'));
+        $simboloDivisa = $this->obtenerSimboloDivisa();
+
+        // Pasamos $productosCriticos a la vista
+        return view('admin.productos.index', compact('productos', 'buscar', 'simboloDivisa', 'productosCriticos'));
     }
 
     public function create()
@@ -86,7 +93,9 @@ class ProductoController extends Controller
     public function show($id)
     {
         $producto = Producto::with('categoria')->findOrFail($id);
-        return view('admin.productos.show', compact('producto'));
+        $simboloDivisa = $this->obtenerSimboloDivisa();
+
+        return view('admin.productos.show', compact('producto', 'simboloDivisa'));
     }
 
     public function edit($id)
@@ -144,5 +153,61 @@ class ProductoController extends Controller
         return redirect()->route('admin.productos.index')
                 ->with('mensaje', 'Producto eliminado exitosamente.')
                 ->with('icono', 'success');
+    }
+
+    public function ajustarStock(Request $request, $id)
+    {
+        $request->validate([
+            'tipo_movimiento' => 'required|in:entrada,salida',
+            'cantidad' => 'required|integer|min:1',
+        ]);
+
+        $producto = Producto::findOrFail($id);
+
+        if ($request->tipo_movimiento === 'entrada') {
+            $producto->stock += $request->cantidad;
+            $mensaje = "Se agregaron {$request->cantidad} unidades correctamente.";
+        } else {
+            if ($producto->stock < $request->cantidad) {
+                return back()->with('error', 'Stock insuficiente para realizar la salida.');
+            }
+            $producto->stock -= $request->cantidad;
+            $mensaje = "Se retiraron {$request->cantidad} unidades correctamente.";
+        }
+
+        $producto->save();
+
+        // Verificamos si quedó en stock crítico
+        if ($producto->stock <= $producto->stock_minimo) {
+            return back()->with('mensaje', '¡Atención! ' . $mensaje . ' El stock de este producto ha llegado al límite mínimo.')
+                        ->with('icono', 'warning'); // Esto será capturado por tu layout
+        }
+
+        return back()->with('mensaje', $mensaje)
+                    ->with('icono', 'success');
+    }
+
+    public function exportarExcel()
+    {
+        return Excel::download(new ProductosExport, 'productos_' . date('Y-m-d') . '.xlsx');
+    }
+
+    public function exportarPdf()
+    {
+        $productos = Producto::with('categoria')->get();
+
+        // Configuramos el papel en tamaño carta ('a4') y en horizontal ('landscape')
+        $pdf = Pdf::loadView('admin.productos.pdf', compact('productos'))
+                ->setPaper('a4', 'landscape');
+
+        return $pdf->download('productos_' . date('Y-m-d') . '.pdf');
+    }
+
+    public function imprimirCodigosBarras()
+    {
+        // Obtenemos todos los productos activos o todos en general
+        $productos = Producto::all();
+
+        return view('admin.productos.barras', compact('productos'));
     }
 }

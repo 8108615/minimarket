@@ -150,7 +150,7 @@
                     Cancelar
                 </a>
                 <button type="submit"
-                    class="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-lg transition text-sm flex items-center gap-2 cursor-pointer">
+                    class="px-4 py-2 bg-green-500 hover:bg-green-600 text-white font-semibold rounded-lg transition text-sm flex items-center gap-2 cursor-pointer">
                     <i class="fas fa-save"></i> Actualizar Producto
                 </button>
             </div>
