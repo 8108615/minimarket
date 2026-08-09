@@ -44,6 +44,10 @@
                                 :current="request()->routeIs('admin.clientes.*')" wire:navigate>Clientes
                     </flux:navlist.item>
 
+                    <flux:navlist.item icon="shopping-cart" :href="route('admin.compras.index')"
+                                :current="request()->routeIs('admin.compras.*')" wire:navigate>Compras
+                    </flux:navlist.item>
+
                 </flux:sidebar.group>
 
             </flux:sidebar.nav>

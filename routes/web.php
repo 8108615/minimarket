@@ -70,7 +70,15 @@ Route::get('/admin/cliente/{id}/edit', [App\Http\Controllers\ClienteController::
 Route::put('/admin/cliente/{id}', [App\Http\Controllers\ClienteController::class, 'update'])->name('admin.clientes.update')->middleware('auth');
 Route::delete('/admin/cliente/{id}', [App\Http\Controllers\ClienteController::class, 'destroy'])->name('admin.clientes.destroy')->middleware('auth');
 
-
+// Rutas para Compras
+Route::get('/admin/compras', [App\Http\Controllers\CompraController::class, 'index'])->name('admin.compras.index')->middleware('auth');
+Route::get('/admin/compras/create', [App\Http\Controllers\CompraController::class, 'create'])->name('admin.compras.create')->middleware('auth');
+Route::post('/admin/compras', [App\Http\Controllers\CompraController::class, 'store'])->name('admin.compras.store')->middleware('auth');
+Route::get('/admin/compras/excel', [App\Http\Controllers\CompraController::class, 'excel'])->name('admin.compras.excel')->middleware('auth');
+Route::get('/admin/compras/pdf', [App\Http\Controllers\CompraController::class, 'pdf'])->name('admin.compras.pdf')->middleware('auth');
+Route::get('/admin/compra/{compra}', [App\Http\Controllers\CompraController::class, 'show'])->name('admin.compras.show')->middleware('auth');
+Route::delete('/admin/compras/{compra}', [App\Http\Controllers\CompraController::class, 'destroy'])->name('admin.compras.destroy')->middleware('auth');
+Route::post('/admin/compras/producto-ajax', [App\Http\Controllers\CompraController::class, 'storeProductAjax'])->name('admin.compras.producto-ajax')->middleware('auth');
 
 
 
