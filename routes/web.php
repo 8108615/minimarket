@@ -80,6 +80,16 @@ Route::get('/admin/compra/{compra}', [App\Http\Controllers\CompraController::cla
 Route::delete('/admin/compras/{compra}', [App\Http\Controllers\CompraController::class, 'destroy'])->name('admin.compras.destroy')->middleware('auth');
 Route::post('/admin/compras/producto-ajax', [App\Http\Controllers\CompraController::class, 'storeProductAjax'])->name('admin.compras.producto-ajax')->middleware('auth');
 
+// Rutas para Ventas
+Route::get('/admin/ventas', [App\Http\Controllers\VentaController::class, 'index'])->name('admin.ventas.index')->middleware('auth');
+Route::get('/admin/ventas/create', [App\Http\Controllers\VentaController::class, 'create'])->name('admin.ventas.create')->middleware('auth');
+Route::post('/admin/ventas', [App\Http\Controllers\VentaController::class, 'store'])->name('admin.ventas.store')->middleware('auth');
+Route::get('/admin/ventas/excel', [App\Http\Controllers\VentaController::class, 'excel'])->name('admin.ventas.excel')->middleware('auth');
+Route::get('/admin/ventas/pdf', [App\Http\Controllers\VentaController::class, 'pdf'])->name('admin.ventas.pdf')->middleware('auth');
+Route::get('/admin/venta/{id}', [App\Http\Controllers\VentaController::class, 'show'])->name('admin.ventas.show')->middleware('auth');
+Route::delete('/admin/ventas/{id}', [App\Http\Controllers\VentaController::class, 'destroy'])->name('admin.ventas.destroy')->middleware('auth');
+
+
 
 
 require __DIR__.'/settings.php';

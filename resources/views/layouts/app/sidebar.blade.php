@@ -48,6 +48,10 @@
                                 :current="request()->routeIs('admin.compras.*')" wire:navigate>Compras
                     </flux:navlist.item>
 
+                    <flux:navlist.item icon="currency-dollar" :href="route('admin.ventas.index')"
+                                :current="request()->routeIs('admin.ventas.*')" wire:navigate>Ventas
+                    </flux:navlist.item>
+
                 </flux:sidebar.group>
 
             </flux:sidebar.nav>
