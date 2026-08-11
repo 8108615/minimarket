@@ -2,49 +2,43 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 
 class Venta extends Model
 {
     use HasFactory;
 
+    protected $table = 'ventas';
+
     protected $fillable = [
         'cliente_id',
         'user_id',
-        'total',
+        'tipo_comprobante',
+        'numero_comprobante',
         'metodo_pago',
-        'estado',
-        'fecha_venta'
+        'codigo_transaccion',
+        'subtotal',
+        'total',
+        'fecha_venta',
+        'monto_recibido',
+        'vuelto_entregado',
+        'estado'
     ];
 
-    // Constantes para métodos de pago
-    const METODO_EFECTIVO = 'Efectivo';
-    const METODO_QR = 'QR';
-    const METODO_TARJETA = 'Tarjeta';
-
-    public static function metodosPago()
-    {
-        return [
-            self::METODO_EFECTIVO => 'Efectivo',
-            self::METODO_QR => 'QR',
-            self::METODO_TARJETA => 'Tarjeta',
-        ];
-    }
-
-    // Relación: Una venta pertenece a un cliente
+    // Relación con el cliente (Una venta pertenece a un cliente)
     public function cliente()
     {
         return $this->belongsTo(Cliente::class);
     }
 
-    // Relación: Una venta pertenece a un usuario (quien la realizó)
+    // Relación con el usuario/cajero (Una venta fue realizada por un usuario)
     public function user()
     {
         return $this->belongsTo(User::class);
     }
 
-    // Relación: Una venta tiene muchos detalles
+    // Relación con los detalles (Una venta tiene muchos detalles de productos)
     public function detalles()
     {
         return $this->hasMany(DetalleVenta::class);

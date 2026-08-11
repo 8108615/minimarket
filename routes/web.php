@@ -86,9 +86,10 @@ Route::get('/admin/ventas/create', [App\Http\Controllers\VentaController::class,
 Route::post('/admin/ventas', [App\Http\Controllers\VentaController::class, 'store'])->name('admin.ventas.store')->middleware('auth');
 Route::get('/admin/ventas/excel', [App\Http\Controllers\VentaController::class, 'excel'])->name('admin.ventas.excel')->middleware('auth');
 Route::get('/admin/ventas/pdf', [App\Http\Controllers\VentaController::class, 'pdf'])->name('admin.ventas.pdf')->middleware('auth');
-Route::get('/admin/venta/{id}', [App\Http\Controllers\VentaController::class, 'show'])->name('admin.ventas.show')->middleware('auth');
+Route::get('/admin/ventas/{id}/detalles', [App\Http\Controllers\VentaController::class, 'getDetalles'])->name('admin.ventas.getDetalles')->middleware('auth');
+Route::get('/admin/ventas/{id}/ticket', [App\Http\Controllers\VentaController::class, 'getTicket'])->name('admin.ventas.getTicket')->middleware('auth');
+Route::get('/admin/ventas/{id}', [App\Http\Controllers\VentaController::class, 'show'])->name('admin.ventas.show')->middleware('auth');
 Route::delete('/admin/ventas/{id}', [App\Http\Controllers\VentaController::class, 'destroy'])->name('admin.ventas.destroy')->middleware('auth');
-
 
 
 

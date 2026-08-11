@@ -15,11 +15,16 @@ return new class extends Migration
             $table->id();
             $table->foreignId('cliente_id')->nullable()->constrained('clientes')->nullOnDelete();
             $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
-            $table->decimal('total', 10, 2);
+            $table->enum('tipo_comprobante', ['Boleta', 'Factura'])->default('Boleta');
+            $table->string('numero_comprobante')->unique();
             $table->enum('metodo_pago', ['Efectivo', 'QR', 'Tarjeta'])->default('Efectivo');
+            $table->string('codigo_transaccion')->nullable();
+            $table->decimal('subtotal', 10, 2);
+            $table->decimal('total', 10, 2);
             $table->timestamp('fecha_venta')->useCurrent();
+            $table->decimal('monto_recibido', 10, 2);
+            $table->decimal('vuelto_entregado', 10, 2);
             $table->string('estado')->default('Completado');
-
             $table->timestamps();
         });
     }
