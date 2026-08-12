@@ -179,15 +179,140 @@ class VentaController extends Controller
     }
 
     // Exportar Excel (Pendiente de implementar según tu librería)
-    public function excel()
+    public function pdf(Request $request)
     {
-        return back()->with(['mensaje' => 'Función de Excel en desarrollo', 'icono' => 'info']);
+        $busqueda = $request->get('busqueda');
+        $fechaInicio = $request->get('fecha_inicio');
+        $fechaFin = $request->get('fecha_fin');
+
+        $ventas = Venta::with(['cliente', 'user', 'detalles.producto'])
+            ->when($busqueda, function ($query, $busqueda) {
+                return $query->where('numero_comprobante', 'like', "%{$busqueda}%")
+                             ->orWhereHas('cliente', function ($q) use ($busqueda) {
+                                 $q->where('nombres', 'like', "%{$busqueda}%")
+                                   ->orWhere('apellidos', 'like', "%{$busqueda}%");
+                             });
+            })
+            ->when($fechaInicio && $fechaFin, function ($query) use ($fechaInicio, $fechaFin) {
+                return $query->whereBetween('fecha_venta', [$fechaInicio . ' 00:00:00', $fechaFin . ' 23:59:59']);
+            })
+            ->when($fechaInicio && !$fechaFin, function ($query) use ($fechaInicio) {
+                return $query->where('fecha_venta', '>=', $fechaInicio . ' 00:00:00');
+            })
+            ->when(!$fechaInicio && $fechaFin, function ($query) use ($fechaFin) {
+                return $query->where('fecha_venta', '<=', $fechaFin . ' 23:59:59');
+            })
+            ->latest('fecha_venta')
+            ->get();
+
+        return view('admin.ventas.pdf', compact('ventas', 'busqueda', 'fechaInicio', 'fechaFin'));
     }
 
-    // Exportar PDF (Pendiente de implementar según tu librería)
-    public function pdf()
+    // Exportar Reporte en Excel con filtro de fechas
+    public function excel(Request $request)
     {
-        return back()->with(['mensaje' => 'Función de PDF en desarrollo', 'icono' => 'info']);
+        $fileName = 'reporte_ventas_' . date('Y-m-d_H-i-s') . '.csv';
+        $busqueda = $request->get('busqueda');
+        $fechaInicio = $request->get('fecha_inicio');
+        $fechaFin = $request->get('fecha_fin');
+
+        $ventas = Venta::with(['cliente', 'user', 'detalles.producto'])
+            ->when($busqueda, function ($query, $busqueda) {
+                return $query->where('numero_comprobante', 'like', "%{$busqueda}%")
+                             ->orWhereHas('cliente', function ($q) use ($busqueda) {
+                                 $q->where('nombres', 'like', "%{$busqueda}%")
+                                   ->orWhere('apellidos', 'like', "%{$busqueda}%");
+                             });
+            })
+            ->when($fechaInicio && $fechaFin, function ($query) use ($fechaInicio, $fechaFin) {
+                return $query->whereBetween('fecha_venta', [$fechaInicio . ' 00:00:00', $fechaFin . ' 23:59:59']);
+            })
+            ->when($fechaInicio && !$fechaFin, function ($query) use ($fechaInicio) {
+                return $query->where('fecha_venta', '>=', $fechaInicio . ' 00:00:00');
+            })
+            ->when(!$fechaInicio && $fechaFin, function ($query) use ($fechaFin) {
+                return $query->where('fecha_venta', '<=', $fechaFin . ' 23:59:59');
+            })
+            ->latest('fecha_venta')
+            ->get();
+
+        $headers = [
+            "Content-type"        => "text/csv; charset=UTF-8",
+            "Content-Disposition" => "attachment; filename=$fileName",
+            "Pragma"              => "no-cache",
+            "Cache-Control"       => "must-revalidate, post-check=0, pre-check=0",
+            "Expires"             => "0"
+        ];
+
+        $callback = function() use($ventas, $fechaInicio, $fechaFin) {
+            $file = fopen('php://output', 'w');
+            fprintf($file, chr(0xEF).chr(0xBB).chr(0xBF)); // BOM para tildes
+
+            // Cabeceras
+            fputcsv($file, [
+                'ID Venta', 'Nro Comprobante', 'Tipo Comprobante', 'Fecha Venta',
+                'Cliente', 'Usuario (Atendido por)', 'Método Pago', 'Código Transacción',
+                'Subtotal (Bs.)', 'Total (Bs.)', 'Monto Recibido (Bs.)', 'Vuelto (Bs.)', 'Estado',
+                'Producto / Detalle', 'Cantidad Vendida', 'Precio Unitario (Bs.)', 'Subtotal Detalle (Bs.)'
+            ], ';');
+
+            $totalCantidadGeneral = 0;
+            $totalMontoGeneral = 0;
+
+            foreach ($ventas as $venta) {
+                $clienteNombre = $venta->cliente ? $venta->cliente->nombres . ' ' . ($venta->cliente->apellidos ?? '') : 'Público General';
+                $userName = $venta->user->name ?? 'N/A';
+
+                if ($venta->detalles->count() > 0) {
+                    foreach ($venta->detalles as $detalle) {
+                        if ($venta->estado === 'Completado') {
+                            $totalCantidadGeneral += $detalle->cantidad;
+                            $totalMontoGeneral += $detalle->subtotal;
+                        }
+
+                        fputcsv($file, [
+                            $venta->id,
+                            $venta->numero_comprobante,
+                            $venta->tipo_comprobante,
+                            $venta->fecha_venta ?? $venta->created_at,
+                            $clienteNombre,
+                            $userName,
+                            $venta->metodo_pago,
+                            $venta->codigo_transaccion ?? 'N/A',
+                            $venta->subtotal,
+                            $venta->total,
+                            $venta->monto_recibido,
+                            $venta->vuelto_entregado,
+                            $venta->estado,
+                            $detalle->producto->nombre ?? $detalle->producto->name ?? 'Producto #' . $detalle->producto_id,
+                            $detalle->cantidad,
+                            $detalle->precio_venta,
+                            $detalle->subtotal
+                        ], ';');
+                    }
+                } else {
+                    fputcsv($file, [
+                        $venta->id, $venta->numero_comprobante, $venta->tipo_comprobante, $venta->fecha_venta ?? $venta->created_at,
+                        $clienteNombre, $userName, $venta->metodo_pago, $venta->codigo_transaccion ?? 'N/A',
+                        $venta->subtotal, $venta->total, $venta->monto_recibido, $venta->vuelto_entregado, $venta->estado,
+                        'Sin detalles', 0, 0, 0
+                    ], ';');
+                }
+            }
+
+            fputcsv($file, [], ';');
+            fputcsv($file, [
+                '', '', '', '', '', '', '', '', '', '', '', '', '',
+                'TOTAL GENERAL (COMPLETADAS):',
+                $totalCantidadGeneral,
+                '',
+                $totalMontoGeneral
+            ], ';');
+
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
     }
 
     public function getDetalles($id)

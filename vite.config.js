@@ -2,7 +2,6 @@ import {
     defineConfig
 } from 'vite';
 import laravel from 'laravel-vite-plugin';
-import { bunny } from 'laravel-vite-plugin/fonts';
 import tailwindcss from "@tailwindcss/vite";
 
 export default defineConfig({
@@ -14,15 +13,13 @@ export default defineConfig({
                 'resources/js/passkeys.js',
             ],
             refresh: true,
-            fonts: [
-                bunny('Instrument Sans', {
-                    weights: [400, 500, 600],
-                }),
-            ],
         }),
         tailwindcss(),
     ],
     server: {
+        host: '127.0.0.1',
+        port: 5173, // Forzamos el puerto exacto que espera Laravel
+        strictPort: true, // Si el 5173 está ocupado, avisa en lugar de cambiar al 5174
         cors: true,
         watch: {
             ignored: ['**/storage/framework/views/**'],
