@@ -16,19 +16,31 @@ class VentaController extends Controller
     public function index(Request $request)
     {
         $busqueda = $request->get('busqueda');
+        $fechaInicio = $request->get('fecha_inicio');
+        $fechaFin = $request->get('fecha_fin');
 
-        $ventas = Venta::with(['cliente', 'user'])
+        $ventas = Venta::with(['cliente', 'user', 'detalles.producto'])
             ->when($busqueda, function ($query, $busqueda) {
                 return $query->where('numero_comprobante', 'like', "%{$busqueda}%")
-                             ->orWhereHas('cliente', function ($q) use ($busqueda) {
-                                 $q->where('nombres', 'like', "%{$busqueda}%")
-                                   ->orWhere('apellidos', 'like', "%{$busqueda}%");
-                             });
+                           ->orWhereHas('cliente', function ($q) use ($busqueda) {
+                               $q->where('nombres', 'like', "%{$busqueda}%");
+                                 
+                           });
+            })
+            ->when($fechaInicio && $fechaFin, function ($query) use ($fechaInicio, $fechaFin) {
+                return $query->whereBetween('fecha_venta', [$fechaInicio . ' 00:00:00', $fechaFin . ' 23:59:59']);
+            })
+            ->when($fechaInicio && !$fechaFin, function ($query) use ($fechaInicio) {
+                return $query->where('fecha_venta', '>=', $fechaInicio . ' 00:00:00');
+            })
+            ->when(!$fechaInicio && $fechaFin, function ($query) use ($fechaFin) {
+                return $query->where('fecha_venta', '<=', $fechaFin . ' 23:59:59');
             })
             ->latest('fecha_venta')
             ->paginate(10);
 
-        return view('admin.ventas.index', compact('ventas', 'busqueda'));
+        // Importante: pasar también las variables a la vista para que los inputs mantengan los valores y la paginación no los olvide
+        return view('admin.ventas.index', compact('ventas', 'busqueda', 'fechaInicio', 'fechaFin'));
     }
 
     // Vista para crear una nueva venta

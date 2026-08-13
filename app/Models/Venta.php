@@ -14,6 +14,7 @@ class Venta extends Model
     protected $fillable = [
         'cliente_id',
         'user_id',
+        'caja_id', // <--- AGREGADO
         'tipo_comprobante',
         'numero_comprobante',
         'metodo_pago',
@@ -26,19 +27,24 @@ class Venta extends Model
         'estado'
     ];
 
-    // Relación con el cliente (Una venta pertenece a un cliente)
+    // ... (cliente, user y detalles se mantienen igual)
+
+    // Relación con la caja (Una venta pertenece a una caja)
+    public function caja()
+    {
+        return $this->belongsTo(Caja::class);
+    }
+
     public function cliente()
     {
         return $this->belongsTo(Cliente::class);
     }
 
-    // Relación con el usuario/cajero (Una venta fue realizada por un usuario)
     public function user()
     {
         return $this->belongsTo(User::class);
     }
 
-    // Relación con los detalles (Una venta tiene muchos detalles de productos)
     public function detalles()
     {
         return $this->hasMany(DetalleVenta::class);

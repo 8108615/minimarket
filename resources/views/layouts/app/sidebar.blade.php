@@ -52,6 +52,10 @@
                                 :current="request()->routeIs('admin.ventas.*')" wire:navigate>Ventas
                     </flux:navlist.item>
 
+                    <flux:navlist.item icon="calculator" :href="route('admin.cajas.index')"
+                                :current="request()->routeIs('admin.cajas.*')" wire:navigate>Cajas
+                    </flux:navlist.item>
+
                 </flux:sidebar.group>
 
             </flux:sidebar.nav>

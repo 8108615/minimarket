@@ -39,14 +39,22 @@
 
                 <div class="flex items-center gap-2">
                     <!-- Botón Excel -->
-                    <a href="{{ route('admin.ventas.excel') }}"
+                    <a href="{{ route('admin.ventas.excel', [
+                            'busqueda' => request('busqueda'),
+                            'fecha_inicio' => request('fecha_inicio'),
+                            'fecha_fin' => request('fecha_fin')
+                        ]) }}"
                         class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-2 rounded-lg flex items-center transition shadow-sm text-sm font-semibold gap-2">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
                         Excel
                     </a>
 
                     <!-- Botón PDF -->
-                    <a href="{{ route('admin.ventas.pdf') }}" target="_blank"
+                    <a href="{{ route('admin.ventas.pdf', [
+                            'busqueda' => request('busqueda'),
+                            'fecha_inicio' => request('fecha_inicio'),
+                            'fecha_fin' => request('fecha_fin')
+                        ]) }}" target="_blank"
                         class="bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded-lg flex items-center transition shadow-sm text-sm font-semibold gap-2">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 2h12a2 2 0 012 2v16a2 2 0 01-2 2H6a2 2 0 01-2-2V4a2 2 0 012-2zm2 5h8M8 11h8m-8 4h5"></path></svg>
                         PDF
@@ -108,6 +116,7 @@
                             <th class="px-4 py-3">COMPROBANTE</th>
                             <th class="px-4 py-3">FECHA</th>
                             <th class="px-4 py-3">CLIENTE</th>
+                            <th class="px-4 py-3">PRODUCTOS</th> <!-- NUEVA COLUMNA -->
                             <th class="px-4 py-3">USUARIO</th>
                             <th class="px-4 py-3">TIPO</th>
                             <th class="px-4 py-3">PAGO</th>
@@ -123,6 +132,23 @@
                                 <td class="px-4 py-3 font-semibold">{{ $venta->numero_comprobante }}</td>
                                 <td class="px-4 py-3 text-xs text-gray-400">{{ $venta->fecha_venta ?? $venta->created_at }}</td>
                                 <td class="px-4 py-3">{{ $venta->cliente ? $venta->cliente->nombres . ' ' . ($venta->cliente->apellidos ?? '') : 'Público General' }}</td>
+
+                                <!-- CONTENIDO DE LA NUEVA COLUMNA PRODUCTOS -->
+                                <td class="px-4 py-3 text-xs">
+                                    <ul class="space-y-1">
+                                        @foreach($venta->detalles as $detalle)
+                                            <li class="flex items-center justify-between gap-2 border-b border-gray-700/40 pb-1 last:border-none last:pb-0">
+                                                <span class="text-gray-200 font-medium">
+                                                    {{ $detalle->producto->nombre ?? $detalle->producto->name ?? 'Producto' }}
+                                                </span>
+                                                <span class="bg-gray-700 text-gray-300 px-1.5 py-0.5 rounded text-[10px] font-semibold whitespace-nowrap">
+                                                    Cant: {{ $detalle->cantidad }}
+                                                </span>
+                                            </li>
+                                        @endforeach
+                                    </ul>
+                                </td>
+
                                 <td class="px-4 py-3 text-xs text-gray-400">{{ $venta->user->name ?? 'N/A' }}</td>
                                 <td class="px-4 py-3">
                                     <span class="px-2 py-1 bg-zinc-700 text-xs rounded font-semibold">{{ $venta->tipo_comprobante }}</span>
@@ -190,7 +216,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="10" class="px-4 py-8 text-center text-gray-400 italic">
+                                <td colspan="11" class="px-4 py-8 text-center text-gray-400 italic">
                                     No se encontraron registros de ventas.
                                 </td>
                             </tr>
@@ -288,7 +314,5 @@
                 </div>
             </div>
         </div>
-
-
     </flux:main>
 </x-layouts::app.sidebar>

@@ -4,7 +4,7 @@
         <br>
         <flux:separator variant="subtle" />
     </div>
-    
+
     <div class="flex gap-4">
         <div class="flex-1">
             <form action="{{ route('admin.categorias.index') }}" method="GET" class="flex gap-2 w-1/2">
