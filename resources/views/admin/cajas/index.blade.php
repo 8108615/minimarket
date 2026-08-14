@@ -26,12 +26,63 @@
         </div>
 
         <div class="flex-1 justify-end flex">
-            <a href="{{ route('admin.cajas.create') }}"
-                class="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-lg transition flex items-center gap-2" wire:navigate>
-                <i class="fas fa-plus mr-2"></i> Abrir Caja
-            </a>
+            @php
+                // Verificamos si el usuario actual tiene alguna caja abierta
+                $tieneCajaAbierta = \App\Models\Caja::where('user_id', Auth::id())->where('estado', 'abierto')->exists();
+            @endphp
+
+            @if($tieneCajaAbierta)
+                <div class="flex items-center px-4 py-2 bg-amber-100 dark:bg-amber-900/50 border border-amber-300 dark:border-amber-700 text-amber-800 dark:text-amber-300 rounded-lg text-sm font-semibold">
+                    <i class="fas fa-exclamation-triangle mr-2"></i> Caja Abierta.
+                </div>
+            @else
+                <!-- Botón que abre el Modal de Flux -->
+                <flux:modal.trigger name="abrir-caja-modal">
+                    <flux:button variant="primary" class="bg-blue-500 hover:bg-blue-600 text-white font-semibold cursor-pointer">
+                        <i class="fas fa-plus mr-2"></i> Abrir Caja
+                    </flux:button>
+                </flux:modal.trigger>
+            @endif
         </div>
     </div>
+
+    <!-- MODAL PARA ABRIR CAJA -->
+    <flux:modal name="abrir-caja-modal" class="md:w-96 space-y-6">
+        <div>
+            <flux:heading size="lg">Abrir Nueva Caja</flux:heading>
+            <flux:text class="mt-1">Ingresa el monto inicial con el que abrirás la caja.</flux:text>
+        </div>
+
+        <form action="{{ route('admin.cajas.store') }}" method="POST" class="space-y-4">
+            @csrf
+            <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Monto Inicial ({{ $simboloMoneda }})</label>
+                <div class="relative">
+                    <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+                        <i class="fas fa-wallet"></i>
+                    </span>
+                    <input type="number" step="0.01" name="saldo_inicial" required
+                        class="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-zinc-700 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-zinc-800 dark:text-white"
+                        placeholder="0.00" value="{{ old('saldo_inicial') }}">
+                </div>
+                @error('saldo_inicial')
+                    <span class="text-red-500 text-xs mt-1 block">{{ $message }}</span>
+                @enderror
+            </div>
+
+            <div class="flex justify-end gap-2 pt-4">
+                <flux:modal.close>
+                    <flux:button variant="subtle" class="cursor-pointer">
+                        <i class="fas fa-times mr-1"></i> Cancelar
+                    </flux:button>
+                </flux:modal.close>
+
+                <flux:button type="submit" variant="primary" class="bg-blue-500 hover:bg-blue-600 text-white cursor-pointer">
+                    <i class="fas fa-save mr-1"></i> Guardar
+                </flux:button>
+            </div>
+        </form>
+    </flux:modal>
 
     @if (request('buscar'))
         <div class="mt-4 p-4 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-lg">
@@ -64,9 +115,9 @@
                     <tr class="hover:bg-gray-50 dark:hover:bg-zinc-700/50 transition">
                         <td class="px-3 py-2 border border-gray-200 dark:border-zinc-700 text-sm text-center">{{ $loop->iteration + ($cajas->currentPage() - 1) * $cajas->perPage() }}</td>
                         <td class="px-3 py-2 border border-gray-200 dark:border-zinc-700 text-sm font-semibold">{{ $caja->user->name ?? 'N/A' }}</td>
-                        <td class="px-3 py-2 border border-gray-200 dark:border-zinc-700 text-sm text-center">${{ number_format($caja->saldo_inicial, 2) }}</td>
+                        <td class="px-3 py-2 border border-gray-200 dark:border-zinc-700 text-sm text-center">{{ $simboloMoneda }} {{ number_format($caja->saldo_inicial, 2) }}</td>
                         <td class="px-3 py-2 border border-gray-200 dark:border-zinc-700 text-sm text-center">
-                            {{ $caja->saldo_final ? '$' . number_format($caja->saldo_final, 2) : '-' }}
+                            {{ $simboloMoneda }} {{ number_format($caja->saldo_final, 2) }} 
                         </td>
                         <td class="px-3 py-2 border border-gray-200 dark:border-zinc-700 text-sm text-center">{{ $caja->fecha_apertura }}</td>
                         <td class="px-3 py-2 border border-gray-200 dark:border-zinc-700 text-sm text-center">{{ $caja->fecha_cierre ?? 'En curso' }}</td>

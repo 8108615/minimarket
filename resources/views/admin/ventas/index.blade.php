@@ -3,6 +3,7 @@
         <div class="space-y-6" x-data="{
             verDetalleModal: false,
             imprimirModal: false,
+            cajaCerradaModal: {{ session('caja_cerrada') ? 'true' : 'false' }},
             ventaSeleccionada: null,
             simboloMoneda: 'Bs.',
             async verDetalle(id) {
@@ -30,7 +31,6 @@
                 }
             }
         }">
-            <!-- Encabezado con título y subtítulo -->
             <div class="flex justify-between items-center">
                 <div>
                     <h2 class="text-2xl font-bold text-white border-l-4 border-blue-600 pl-3">VENTAS</h2>
@@ -38,7 +38,6 @@
                 </div>
 
                 <div class="flex items-center gap-2">
-                    <!-- Botón Excel -->
                     <a href="{{ route('admin.ventas.excel', [
                             'busqueda' => request('busqueda'),
                             'fecha_inicio' => request('fecha_inicio'),
@@ -49,7 +48,6 @@
                         Excel
                     </a>
 
-                    <!-- Botón PDF -->
                     <a href="{{ route('admin.ventas.pdf', [
                             'busqueda' => request('busqueda'),
                             'fecha_inicio' => request('fecha_inicio'),
@@ -60,7 +58,6 @@
                         PDF
                     </a>
 
-                    <!-- Botón Realizar Venta -->
                     <a href="{{ route('admin.ventas.create') }}"
                         class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center transition shadow-sm text-sm font-semibold gap-2">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
@@ -69,31 +66,26 @@
                 </div>
             </div>
 
-            <!-- Buscador con formulario GET -->
             <form method="GET" action="{{ route('admin.ventas.index') }}" class="bg-gray-900 p-4 rounded-t-lg border border-gray-700 flex flex-wrap items-center justify-between gap-4">
                 <div class="flex items-center gap-2 flex-wrap">
-                    <!-- Búsqueda por texto -->
                     <input type="text"
                         name="busqueda"
                         value="{{ $busqueda ?? '' }}"
                         placeholder="Buscar comprobante o cliente..."
                         class="bg-gray-800 border border-gray-700 text-white rounded px-3 py-1.5 text-sm w-64 focus:outline-none focus:border-blue-500">
 
-                    <!-- Fecha Desde -->
                     <div class="flex items-center gap-1">
                         <span class="text-gray-400 text-xs">Desde:</span>
                         <input type="date" name="fecha_inicio" value="{{ $fechaInicio ?? request('fecha_inicio') }}"
                             class="bg-gray-800 border border-gray-700 text-white rounded px-2 py-1.5 text-xs focus:outline-none focus:border-blue-500">
                     </div>
 
-                    <!-- Fecha Hasta -->
                     <div class="flex items-center gap-1">
                         <span class="text-gray-400 text-xs">Hasta:</span>
                         <input type="date" name="fecha_fin" value="{{ $fechaFin ?? request('fecha_fin') }}"
                             class="bg-gray-800 border border-gray-700 text-white rounded px-2 py-1.5 text-xs focus:outline-none focus:border-blue-500">
                     </div>
 
-                    <!-- Botón Filtrar -->
                     <button type="submit" class="bg-blue-600 hover:bg-blue-500 text-white px-4 py-1.5 rounded text-sm transition">
                         Filtrar
                     </button>
@@ -107,7 +99,6 @@
                 </div>
             </form>
 
-            <!-- Tabla de datos -->
             <div class="bg-gray-800 border border-gray-700 rounded-lg overflow-x-auto shadow-sm">
                 <table class="w-full text-left text-gray-300 text-sm">
                     <thead class="bg-gray-900 uppercase text-xs">
@@ -116,7 +107,7 @@
                             <th class="px-4 py-3">COMPROBANTE</th>
                             <th class="px-4 py-3">FECHA</th>
                             <th class="px-4 py-3">CLIENTE</th>
-                            <th class="px-4 py-3">PRODUCTOS</th> <!-- NUEVA COLUMNA -->
+                            <th class="px-4 py-3">PRODUCTOS</th>
                             <th class="px-4 py-3">USUARIO</th>
                             <th class="px-4 py-3">TIPO</th>
                             <th class="px-4 py-3">PAGO</th>
@@ -133,7 +124,6 @@
                                 <td class="px-4 py-3 text-xs text-gray-400">{{ $venta->fecha_venta ?? $venta->created_at }}</td>
                                 <td class="px-4 py-3">{{ $venta->cliente ? $venta->cliente->nombres . ' ' . ($venta->cliente->apellidos ?? '') : 'Público General' }}</td>
 
-                                <!-- CONTENIDO DE LA NUEVA COLUMNA PRODUCTOS -->
                                 <td class="px-4 py-3 text-xs">
                                     <ul class="space-y-1">
                                         @foreach($venta->detalles as $detalle)
@@ -167,19 +157,16 @@
                                     @endif
                                 </td>
                                 <td class="px-4 py-3 text-center space-x-1 whitespace-nowrap">
-                                    <!-- Ver Detalle -->
                                     <button @click="verDetalle({{ $venta->id }})"
                                         class="bg-blue-600 hover:bg-blue-500 text-white p-2 rounded transition" title="Ver Detalles">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
                                     </button>
 
-                                    <!-- Ver Ticket / Imprimir -->
                                     <button @click="prepararImpresion({{ $venta->id }})"
                                         class="bg-sky-600 hover:bg-sky-500 text-white p-2 rounded transition" title="Ver Ticket">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
                                     </button>
 
-                                    <!-- Eliminar / Anular -->
                                     @if($venta->estado === 'Completado')
                                         <form action="{{ route('admin.ventas.destroy', $venta->id) }}" method="POST" id="miFormulario{{ $venta->id }}" class="inline">
                                             @csrf
@@ -225,12 +212,10 @@
                 </table>
             </div>
 
-            <!-- Paginación -->
             <div class="mt-4">
                 {{ $ventas->appends(['busqueda' => $busqueda])->links() }}
             </div>
 
-            <!-- MODAL DE DETALLES -->
             <div x-show="verDetalleModal" class="fixed inset-0 bg-gray-900/75 backdrop-blur-sm flex items-center justify-center z-50 p-4" style="display: none;">
                 <div @click.away="verDetalleModal = false" class="bg-gray-800 rounded-xl shadow-2xl w-full max-w-3xl max-h-[85vh] overflow-y-auto border border-gray-700 text-gray-200">
                     <div class="p-4 border-b border-gray-700 flex justify-between items-center bg-gray-900">
@@ -272,7 +257,6 @@
                 </div>
             </div>
 
-            <!-- MODAL DE TICKET / IMPRESIÓN -->
             <div x-show="imprimirModal" class="fixed inset-0 bg-gray-900/90 backdrop-blur-sm flex flex-col items-center justify-center z-50 p-4 overflow-y-auto" style="display: none;">
                 <div class="bg-white p-6 rounded-lg w-full max-w-sm text-black shadow-xl" id="ticket-imprimir">
                     <h3 class="font-bold text-center uppercase text-base underline mb-2" x-text="ventaSeleccionada?.tipo_comprobante"></h3>
@@ -301,7 +285,6 @@
                     </div>
                 </div>
 
-                <!-- Contenedor con la clase print:hidden para que desaparezca al imprimir -->
                 <div class="flex gap-4 mt-6 print:hidden">
                     <button @click="imprimirModal = false"
                             class="bg-gray-600 hover:bg-gray-700 text-white px-6 py-2 rounded-lg transition shadow-lg text-sm font-semibold">
@@ -313,6 +296,37 @@
                     </button>
                 </div>
             </div>
+
+            <div x-show="cajaCerradaModal" 
+                 style="display: none;" 
+                 class="fixed inset-0 bg-gray-900/75 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+                
+                <div class="bg-gray-800 p-6 rounded-lg text-white max-w-sm w-full border border-gray-700 text-center space-y-4 shadow-xl">
+                    <div class="text-yellow-500 text-4xl flex justify-center">
+                        <svg class="w-12 h-12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                        </svg>
+                    </div>
+                    
+                    <h3 class="font-bold text-lg">Caja Cerrada</h3>
+                    
+                    <p class="text-sm text-gray-300">
+                        {{ session('mensaje', 'Debes aperturar una caja para realizar ventas.') }}
+                    </p>
+                    
+                    <div class="flex justify-center gap-3 pt-2">
+                        <a href="{{ route('admin.cajas.index') }}" 
+                           class="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded text-sm font-medium transition">
+                            Sí, ir a Cajas
+                        </a>
+                        <button @click="cajaCerradaModal = false" 
+                                class="bg-gray-600 hover:bg-gray-500 text-white px-4 py-2 rounded text-sm font-medium transition">
+                            Cancelar
+                        </button>
+                    </div>
+                </div>
+            </div>
+
         </div>
     </flux:main>
 </x-layouts::app.sidebar>

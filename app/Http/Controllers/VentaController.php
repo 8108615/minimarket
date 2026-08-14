@@ -6,6 +6,7 @@ use App\Models\Venta;
 use App\Models\DetalleVenta;
 use App\Models\Producto;
 use App\Models\Cliente;
+use App\Models\Caja;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
@@ -24,7 +25,6 @@ class VentaController extends Controller
                 return $query->where('numero_comprobante', 'like', "%{$busqueda}%")
                            ->orWhereHas('cliente', function ($q) use ($busqueda) {
                                $q->where('nombres', 'like', "%{$busqueda}%");
-                                 
                            });
             })
             ->when($fechaInicio && $fechaFin, function ($query) use ($fechaInicio, $fechaFin) {
@@ -39,22 +39,33 @@ class VentaController extends Controller
             ->latest('fecha_venta')
             ->paginate(10);
 
-        // Importante: pasar también las variables a la vista para que los inputs mantengan los valores y la paginación no los olvide
         return view('admin.ventas.index', compact('ventas', 'busqueda', 'fechaInicio', 'fechaFin'));
     }
 
-    // Vista para crear una nueva venta
+    // Vista para crear una nueva venta (Validando estado de caja)
     public function create()
     {
+        // 1. Verificar si el usuario logueado tiene una caja abierta
+        $cajaAbierta = Caja::where('user_id', Auth::id())
+            ->where('estado', 'abierto') // Asegúrate de que 'abierto' coincida con tu base de datos ('Aperturada' o 'abierto')
+            ->exists();
+
+        // Si NO hay caja abierta, redirigimos al index con los datos para la alerta
+        if (!$cajaAbierta) {
+            return redirect()->route('admin.ventas.index')->with([
+                'caja_cerrada' => true,
+                'mensaje' => 'Debes aperturar una caja para realizar ventas.',
+                'icono' => 'warning'
+            ]);
+        }
+
         $clientes = Cliente::all();
         $productos = Producto::where('stock', '>', 0)->get();
 
-        // Leer el símbolo de la moneda desde public/divisas.json
-        $simboloMoneda = 'Bs.'; // Valor por defecto
+        $simboloMoneda = 'Bs.';
         $pathDivisas = public_path('divisas.json');
         if (file_exists($pathDivisas)) {
             $divisasData = json_decode(file_get_contents($pathDivisas), true);
-            // Ajusta la clave según cómo tengas estructurado tu JSON (ej. 'simbolo' o 'currency')
             $simboloMoneda = $divisasData['simbolo'] ?? ($divisasData[0]['simbolo'] ?? 'Bs.');
         }
 
@@ -67,6 +78,7 @@ class VentaController extends Controller
             'cliente_id' => 'nullable|exists:clientes,id',
             'tipo_comprobante' => 'required|in:Boleta,Factura',
             'metodo_pago' => 'required|in:Efectivo,QR,Tarjeta',
+            'codigo_transaccion' => 'nullable|required_if:metodo_pago,QR,Tarjeta|string',
             'productos' => 'required|array|min:1',
             'productos.*.id' => 'exists:productos,id',
             'productos.*.cantidad' => 'required|integer|min:1',
@@ -76,19 +88,30 @@ class VentaController extends Controller
         try {
             DB::beginTransaction();
 
+            // 1. Buscar caja abierta del usuario logueado
+            $cajaAbierta = Caja::where('user_id', Auth::id())
+                ->where('estado', 'abierto')
+                ->first();
+
+            if (!$cajaAbierta) {
+                throw new \Exception('No tienes ninguna caja abierta. Debes abrir una caja antes de registrar ventas.');
+            }
+
             $subtotal = 0;
             foreach ($request->productos as $item) {
                 $subtotal += $item['cantidad'] * $item['precio_venta'];
             }
 
-            // Generar número de comprobante único según el tipo (BO-0001 o FA-0001)
+            // Generar número de comprobante único
             $prefijo = $request->tipo_comprobante === 'Factura' ? 'FA-' : 'BO-';
             $ultimaVenta = Venta::where('tipo_comprobante', $request->tipo_comprobante)->max('id') ?? 0;
             $numeroComprobante = $prefijo . str_pad($ultimaVenta + 1, 4, '0', STR_PAD_LEFT);
 
+            // 2. Crear la venta vinculada a la caja
             $venta = Venta::create([
                 'cliente_id' => $request->cliente_id,
                 'user_id' => Auth::id(),
+                'caja_id' => $cajaAbierta->id,
                 'tipo_comprobante' => $request->tipo_comprobante,
                 'numero_comprobante' => $numeroComprobante,
                 'metodo_pago' => $request->metodo_pago,
@@ -119,6 +142,9 @@ class VentaController extends Controller
                 $producto->decrement('stock', $item['cantidad']);
             }
 
+            // 3. Sumar el monto de la venta a la caja abierta actual
+            $cajaAbierta->increment('saldo_final', $subtotal);
+
             DB::commit();
 
             return response()->json([
@@ -140,7 +166,6 @@ class VentaController extends Controller
     {
         $venta = Venta::with(['cliente', 'user', 'detalles.producto'])->findOrFail($id);
 
-        // Si la petición viene por AJAX / Fetch, devolvemos JSON
         if (request()->expectsJson()) {
             return response()->json([
                 'id' => $venta->id,
@@ -159,14 +184,18 @@ class VentaController extends Controller
         return view('admin.ventas.show', compact('venta'));
     }
 
-    // Anular o eliminar venta
+    // Anular venta (Cambia de estado y devuelve stock sin borrar el registro)
     public function destroy($id)
     {
         try {
             DB::beginTransaction();
             $venta = Venta::with('detalles')->findOrFail($id);
 
-            // Devolver stock al inventario si se anula
+            if ($venta->estado === 'Anulado') {
+                throw new \Exception('Esta venta ya se encuentra anulada.');
+            }
+
+            // Devolver stock al inventario
             foreach ($venta->detalles as $detalle) {
                 $producto = Producto::find($detalle->producto_id);
                 if ($producto) {
@@ -174,7 +203,17 @@ class VentaController extends Controller
                 }
             }
 
-            $venta->delete();
+            // Cambiar estado a Anulado en lugar de eliminar
+            $venta->update(['estado' => 'Anulado']);
+
+            // Opcional: Si quieres restar el monto de la caja al anular:
+            if ($venta->caja_id) {
+                $caja = Caja::find($venta->caja_id);
+                if ($caja && $caja->estado === 'abierto') {
+                    $caja->decrement('saldo_final', $venta->total);
+                }
+            }
+
             DB::commit();
 
             return redirect()->route('admin.ventas.index')->with([
@@ -190,7 +229,6 @@ class VentaController extends Controller
         }
     }
 
-    // Exportar Excel (Pendiente de implementar según tu librería)
     public function pdf(Request $request)
     {
         $busqueda = $request->get('busqueda');
@@ -200,10 +238,10 @@ class VentaController extends Controller
         $ventas = Venta::with(['cliente', 'user', 'detalles.producto'])
             ->when($busqueda, function ($query, $busqueda) {
                 return $query->where('numero_comprobante', 'like', "%{$busqueda}%")
-                             ->orWhereHas('cliente', function ($q) use ($busqueda) {
-                                 $q->where('nombres', 'like', "%{$busqueda}%")
-                                   ->orWhere('apellidos', 'like', "%{$busqueda}%");
-                             });
+                           ->orWhereHas('cliente', function ($q) use ($busqueda) {
+                               $q->where('nombres', 'like', "%{$busqueda}%")
+                                  ->orWhere('apellidos', 'like', "%{$busqueda}%");
+                           });
             })
             ->when($fechaInicio && $fechaFin, function ($query) use ($fechaInicio, $fechaFin) {
                 return $query->whereBetween('fecha_venta', [$fechaInicio . ' 00:00:00', $fechaFin . ' 23:59:59']);
@@ -220,7 +258,6 @@ class VentaController extends Controller
         return view('admin.ventas.pdf', compact('ventas', 'busqueda', 'fechaInicio', 'fechaFin'));
     }
 
-    // Exportar Reporte en Excel con filtro de fechas
     public function excel(Request $request)
     {
         $fileName = 'reporte_ventas_' . date('Y-m-d_H-i-s') . '.csv';
@@ -231,10 +268,10 @@ class VentaController extends Controller
         $ventas = Venta::with(['cliente', 'user', 'detalles.producto'])
             ->when($busqueda, function ($query, $busqueda) {
                 return $query->where('numero_comprobante', 'like', "%{$busqueda}%")
-                             ->orWhereHas('cliente', function ($q) use ($busqueda) {
-                                 $q->where('nombres', 'like', "%{$busqueda}%")
-                                   ->orWhere('apellidos', 'like', "%{$busqueda}%");
-                             });
+                           ->orWhereHas('cliente', function ($q) use ($busqueda) {
+                               $q->where('nombres', 'like', "%{$busqueda}%")
+                                  ->orWhere('apellidos', 'like', "%{$busqueda}%");
+                           });
             })
             ->when($fechaInicio && $fechaFin, function ($query) use ($fechaInicio, $fechaFin) {
                 return $query->whereBetween('fecha_venta', [$fechaInicio . ' 00:00:00', $fechaFin . ' 23:59:59']);
@@ -256,11 +293,10 @@ class VentaController extends Controller
             "Expires"             => "0"
         ];
 
-        $callback = function() use($ventas, $fechaInicio, $fechaFin) {
+        $callback = function() use($ventas) {
             $file = fopen('php://output', 'w');
-            fprintf($file, chr(0xEF).chr(0xBB).chr(0xBF)); // BOM para tildes
+            fprintf($file, chr(0xEF).chr(0xBB).chr(0xBF));
 
-            // Cabeceras
             fputcsv($file, [
                 'ID Venta', 'Nro Comprobante', 'Tipo Comprobante', 'Fecha Venta',
                 'Cliente', 'Usuario (Atendido por)', 'Método Pago', 'Código Transacción',

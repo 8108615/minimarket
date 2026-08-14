@@ -91,6 +91,7 @@ Route::get('/admin/ventas/{id}/ticket', [App\Http\Controllers\VentaController::c
 Route::get('/admin/ventas/{id}', [App\Http\Controllers\VentaController::class, 'show'])->name('admin.ventas.show')->middleware('auth');
 Route::delete('/admin/ventas/{id}', [App\Http\Controllers\VentaController::class, 'destroy'])->name('admin.ventas.destroy')->middleware('auth');
 
+
 // Rutas para Cajas
 Route::get('/admin/cajas', [App\Http\Controllers\CajaController::class, 'index'])->name('admin.cajas.index')->middleware('auth');
 Route::get('/admin/cajas/create', [App\Http\Controllers\CajaController::class, 'create'])->name('admin.cajas.create')->middleware('auth');
@@ -99,7 +100,6 @@ Route::get('/admin/caja/{id}', [App\Http\Controllers\CajaController::class, 'sho
 Route::get('/admin/caja/{id}/edit', [App\Http\Controllers\CajaController::class, 'edit'])->name('admin.cajas.edit')->middleware('auth');
 Route::put('/admin/caja/{id}', [App\Http\Controllers\CajaController::class, 'update'])->name('admin.cajas.update')->middleware('auth');
 Route::delete('/admin/caja/{id}', [App\Http\Controllers\CajaController::class, 'destroy'])->name('admin.cajas.destroy')->middleware('auth');
-
 // Rutas adicionales para gestión de Caja (Apertura/Cierre)
 Route::post('/admin/cajas/abrir', [App\Http\Controllers\CajaController::class, 'abrirCaja'])->name('admin.cajas.abrir')->middleware('auth');
 Route::post('/admin/cajas/cerrar/{id}', [App\Http\Controllers\CajaController::class, 'cerrarCaja'])->name('admin.cajas.cerrar')->middleware('auth');
