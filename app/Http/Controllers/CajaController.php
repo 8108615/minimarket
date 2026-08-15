@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Caja;
+use App\Models\Venta;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -73,7 +74,16 @@ class CajaController extends Controller
     public function show($id)
     {
         $caja = Caja::findOrFail($id);
-        return view('admin.cajas.show', compact('caja'));
+
+        // Leer el símbolo de la moneda desde public/divisas.json
+        $simboloMoneda = 'Bs.';
+        $pathDivisas = public_path('divisas.json');
+        if (file_exists($pathDivisas)) {
+            $divisasData = json_decode(file_get_contents($pathDivisas), true);
+            $simboloMoneda = $divisasData['simbolo'] ?? ($divisasData[0]['simbolo'] ?? 'Bs.');
+        }
+
+        return view('admin.cajas.show', compact('caja', 'simboloMoneda'));
     }
 
     public function abrirCaja(Request $request)
@@ -94,10 +104,10 @@ class CajaController extends Controller
             }
 
             // 1. Sumar ventas que tengan explícitamente el caja_id
-            $ventasPorId = \App\Models\Venta::where('caja_id', $caja->id)->sum('total');
+            $ventasPorId = Venta::where('caja_id', $caja->id)->sum('total');
 
             // 2. Por seguridad, sumar también las ventas del usuario hechas entre la fecha de apertura y ahora (si no se les asignó caja_id)
-            $ventasPorFecha = \App\Models\Venta::where('user_id', $caja->user_id)
+            $ventasPorFecha = Venta::where('user_id', $caja->user_id)
                 ->whereNull('caja_id')
                 ->whereBetween('fecha_venta', [$caja->fecha_apertura, now()])
                 ->sum('total');
