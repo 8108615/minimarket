@@ -100,8 +100,12 @@ Route::get('/admin/caja/{id}', [App\Http\Controllers\CajaController::class, 'sho
 Route::get('/admin/caja/{id}/edit', [App\Http\Controllers\CajaController::class, 'edit'])->name('admin.cajas.edit')->middleware('auth');
 Route::put('/admin/caja/{id}', [App\Http\Controllers\CajaController::class, 'update'])->name('admin.cajas.update')->middleware('auth');
 Route::delete('/admin/caja/{id}', [App\Http\Controllers\CajaController::class, 'destroy'])->name('admin.cajas.destroy')->middleware('auth');
-// Rutas adicionales para gestión de Caja (Apertura/Cierre)
+// Rutas para gestión de Caja (Apertura/Cierre)
 Route::post('/admin/cajas/abrir', [App\Http\Controllers\CajaController::class, 'abrirCaja'])->name('admin.cajas.abrir')->middleware('auth');
+Route::get('cajas/{id}/pdf', [App\Http\Controllers\CajaController::class, 'pdf'])->name('admin.cajas.pdf')->middleware('auth');
 Route::post('/admin/cajas/cerrar/{id}', [App\Http\Controllers\CajaController::class, 'cerrarCaja'])->name('admin.cajas.cerrar')->middleware('auth');
+
+Route::get('/dashboard', [App\Http\Controllers\DashboardController::class, 'index'])->name('admin.dashboard')->middleware('auth');
+
 
 require __DIR__.'/settings.php';

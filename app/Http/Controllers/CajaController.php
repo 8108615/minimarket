@@ -6,6 +6,8 @@ use App\Models\Caja;
 use App\Models\Venta;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Spatie\Permission\Models\Role;
+use App\Models\User;
 
 class CajaController extends Controller
 {
@@ -75,6 +77,24 @@ class CajaController extends Controller
     {
         $caja = Caja::findOrFail($id);
 
+        // 1. Sumar ventas que tengan explícitamente el caja_id
+        $ventasPorId = Venta::where('caja_id', $caja->id)->sum('total');
+
+        // 2. Sumar también las ventas del usuario hechas entre la fecha de apertura y el cierre (o ahora si sigue abierta)
+        $fechaFin = $caja->fecha_cierre ?? now();
+        $ventasPorFecha = Venta::where('user_id', $caja->user_id)
+            ->whereNull('caja_id')
+            ->whereBetween('fecha_venta', [$caja->fecha_apertura, $fechaFin])
+            ->sum('total');
+
+        // Total de ventas real
+        $caja->total_ventas = $ventasPorId + $ventasPorFecha;
+
+        // Si la caja sigue abierta, calculamos el saldo actual en tiempo real
+        if ($caja->estado === 'abierto') {
+            $caja->saldo_final = $caja->saldo_inicial + $caja->total_ventas;
+        }
+
         // Leer el símbolo de la moneda desde public/divisas.json
         $simboloMoneda = 'Bs.';
         $pathDivisas = public_path('divisas.json');
@@ -134,6 +154,51 @@ class CajaController extends Controller
         }
     }
 
+    public function pdf($id)
+    {
+        $caja = Caja::with(['user'])->findOrFail($id);
+
+        // Buscamos dinámicamente al primer usuario que tenga el rol de 'Super Administrador'
+        // Asegúrate de que el nombre del rol coincida exactamente con el de tu base de datos
+        $superAdmin = User::role(['SUPER ADMIN', 'ADMINISTRADOR'])->first();
+
+        // Sumar ventas asociadas
+        $ventasPorId = Venta::where('caja_id', $caja->id)->sum('total');
+
+        $fechaFin = $caja->fecha_cierre ?? now();
+        $ventasPorFecha = Venta::where('user_id', $caja->user_id)
+            ->whereNull('caja_id')
+            ->whereBetween('fecha_venta', [$caja->fecha_apertura, $fechaFin])
+            ->sum('total');
+
+        $caja->total_ventas = $ventasPorId + $ventasPorFecha;
+        if ($caja->estado === 'abierto') {
+            $caja->saldo_final = $caja->saldo_inicial + $caja->total_ventas;
+        }
+
+        // Obtener todas las ventas detalladas del turno
+        $ventas = Venta::with(['cliente', 'detalles.producto'])
+            ->where(function($query) use ($caja, $fechaFin) {
+                $query->where('caja_id', $caja->id)
+                    ->orWhere(function($q) use ($caja, $fechaFin) {
+                        $q->where('user_id', $caja->user_id)
+                            ->whereNull('caja_id')
+                            ->whereBetween('fecha_venta', [$caja->fecha_apertura, $fechaFin]);
+                    });
+            })->get();
+
+        // Símbolo de moneda
+        $simboloMoneda = 'Bs.';
+        $pathDivisas = public_path('divisas.json');
+        if (file_exists($pathDivisas)) {
+            $divisasData = json_decode(file_get_contents($pathDivisas), true);
+            $simboloMoneda = $divisasData['simbolo'] ?? ($divisasData[0]['simbolo'] ?? 'Bs.');
+        }
+
+        // Pasamos $superAdmin a la vista
+        return view('admin.cajas.pdf', compact('caja', 'ventas', 'simboloMoneda', 'superAdmin'));
+    }
+
     public function destroy($id)
     {
         try {
@@ -147,4 +212,6 @@ class CajaController extends Controller
                 ->with(['mensaje' => 'No se puede eliminar la caja: ' . $e->getMessage(), 'icono' => 'error']);
         }
     }
+
+    
 }

@@ -4,7 +4,11 @@
             <flux:heading size="xl" level="1">Detalle de la Caja #{{ $caja->id }}</flux:heading>
             <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Revisa el resumen financiero y las ventas asociadas a este turno.</p>
         </div>
-        <div>
+        <div class="flex gap-2">
+            <a href="{{ route('admin.cajas.pdf', $caja->id) }}" target="_blank"
+                class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition flex items-center gap-2">
+                <i class="fas fa-print"></i> Imprimir Reporte
+            </a>
             <a href="{{ route('admin.cajas.index') }}"
                 class="px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white font-semibold rounded-lg transition flex items-center gap-2">
                 <i class="fas fa-arrow-left"></i> Volver
@@ -99,7 +103,7 @@
         </div>
 
         @php
-            // Obtenemos las ventas del turno cargando únicamente la relación 'detalles.producto' y 'cliente'
+            // Obtenemos las ventas del turno cargando la relación 'detalles.producto' y 'cliente'
             $ventas = \App\Models\Venta::with(['cliente', 'detalles.producto'])
                 ->where(function($query) use ($caja) {
                     $query->where('caja_id', $caja->id)
@@ -128,21 +132,23 @@
                     @forelse($ventas as $index => $venta)
                         <tr class="hover:bg-gray-50 dark:hover:bg-zinc-700/50 transition">
                             <td class="px-3 py-2 border border-gray-200 dark:border-zinc-700 text-sm text-center">{{ $index + 1 }}</td>
-                            
-                            <td class="px-3 py-2 border border-gray-200 dark:border-zinc-700 text-sm text-center font-medium">{{ $venta->nro_comprobante ?? $venta->comprobante ?? 'N/A' }}</td>
-                            
+
+                            <td class="px-3 py-2 border border-gray-200 dark:border-zinc-700 text-sm text-center font-medium">
+                                {{ $venta->numero_comprobante ?? 'N/A' }}
+                            </td>
+
                             <td class="px-3 py-2 border border-gray-200 dark:border-zinc-700 text-sm text-center">{{ $venta->fecha_venta ?? $venta->created_at }}</td>
-                            
+
                             <td class="px-3 py-2 border border-gray-200 dark:border-zinc-700 text-sm text-center font-medium">
                                 {{ $venta->cliente->nombres ?? ($venta->cliente->nombre ?? ($venta->cliente_nombre ?? 'General')) }}
                             </td>
-                            
+
                             <td class="px-3 py-2 border border-gray-200 dark:border-zinc-700 text-sm">
                                 <ul class="list-disc list-inside text-xs text-gray-700 dark:text-gray-300 text-left">
                                     @if($venta->detalles && $venta->detalles->count() > 0)
                                         @foreach($venta->detalles as $detalle)
                                             <li>
-                                                <span class="font-semibold">{{ $detalle->producto->nombre ?? ($detalle->nombre_producto ?? 'Producto') }}</span> 
+                                                <span class="font-semibold">{{ $detalle->producto->nombre ?? ($detalle->producto->name ?? 'Producto') }}</span>
                                                 (Cant: {{ $detalle->cantidad }})
                                             </li>
                                         @endforeach
@@ -152,8 +158,8 @@
                                 </ul>
                             </td>
 
-                            <td class="px-3 py-2 border border-gray-200 dark:border-zinc-700 text-sm text-center">{{ $venta->tipo_pago ?? 'Efectivo' }}</td>
-                            
+                            <td class="px-3 py-2 border border-gray-200 dark:border-zinc-700 text-sm text-center">{{ $venta->metodo_pago ?? 'Efectivo' }}</td>
+
                             <td class="px-3 py-2 border border-gray-200 dark:border-zinc-700 text-sm text-center font-semibold text-green-600 dark:text-green-400">
                                 {{ $simboloMoneda ?? 'Bs.' }} {{ number_format($venta->total, 2) }}
                             </td>

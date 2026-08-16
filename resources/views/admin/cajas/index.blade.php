@@ -130,6 +130,13 @@
                             <div class="flex justify-center gap-2 items-center">
                                 <a href="{{ route('admin.cajas.show', $caja->id) }}" class="inline-flex items-center px-3 py-1.5 bg-gray-500 hover:bg-gray-600 text-white text-xs font-semibold rounded transition" wire:navigate><i class="fas fa-eye mr-1"></i> Ver</a>
 
+                                <!-- Botón de Imprimir Reporte en el Index -->
+                                <a href="{{ route('admin.cajas.pdf', $caja->id) }}" target="_blank"
+                                    class="px-2 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition"
+                                    title="Imprimir Reporte PDF">
+                                    <i class="fas fa-print"></i>
+                                </a>
+
                                 @if($caja->estado == 'abierto')
                                     <button type="button" onclick="confirmarCierre{{ $caja->id }}()" class="inline-flex items-center px-3 py-1.5 bg-amber-500 hover:bg-amber-600 text-white text-xs font-semibold rounded transition cursor-pointer">
                                         <i class="fas fa-lock mr-1"></i> Cerrar
