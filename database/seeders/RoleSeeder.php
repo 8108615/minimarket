@@ -66,8 +66,7 @@ class RoleSeeder extends Seeder
             'Ver datos de la caja', 'Ver formulario de edicion de caja', 'Actualizar caja',
             'Eliminar caja', 'Abrir caja', 'Ver reporte caja pdf', 'Cerrar caja',
 
-            // Dashboard
-            'Ver dashboard'
+            
         ];
 
         // Crear los permisos y asignárselos al Super Admin

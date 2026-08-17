@@ -108,7 +108,7 @@ class RoleController extends Controller
             if (str_contains($nombre, 'venta') || str_contains($nombre, 'ticket')) return 'VENTAS';
             if (str_contains($nombre, 'caja')) return 'CAJAS';
             if (str_contains($nombre, 'ajuste')) return 'AJUSTES';
-            if (str_contains($nombre, 'dashboard')) return 'DASHBOARD';
+            
 
             return 'GENERAL';
         });

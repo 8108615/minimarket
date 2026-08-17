@@ -38,6 +38,7 @@
                 </div>
 
                 <div class="flex items-center gap-2">
+                    @can('Ver ventas excel')
                     <a href="{{ route('admin.ventas.excel', [
                             'busqueda' => request('busqueda'),
                             'fecha_inicio' => request('fecha_inicio'),
@@ -47,7 +48,9 @@
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
                         Excel
                     </a>
+                    @endcan
 
+                    @can('Ver ventas pdf')
                     <a href="{{ route('admin.ventas.pdf', [
                             'busqueda' => request('busqueda'),
                             'fecha_inicio' => request('fecha_inicio'),
@@ -57,12 +60,15 @@
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 2h12a2 2 0 012 2v16a2 2 0 01-2 2H6a2 2 0 01-2-2V4a2 2 0 012-2zm2 5h8M8 11h8m-8 4h5"></path></svg>
                         PDF
                     </a>
+                    @endcan
 
+                    @can('Ver formulario de creacion de venta')
                     <a href="{{ route('admin.ventas.create') }}"
                         class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center transition shadow-sm text-sm font-semibold gap-2">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                         Realizar Venta
                     </a>
+                    @endcan
                 </div>
             </div>
 
@@ -157,17 +163,22 @@
                                     @endif
                                 </td>
                                 <td class="px-4 py-3 text-center space-x-1 whitespace-nowrap">
+                                    @can('Ver detalles de venta')
                                     <button @click="verDetalle({{ $venta->id }})"
                                         class="bg-blue-600 hover:bg-blue-500 text-white p-2 rounded transition" title="Ver Detalles">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
                                     </button>
+                                    @endcan
 
+                                    @can('Ver ticket de venta')
                                     <button @click="prepararImpresion({{ $venta->id }})"
                                         class="bg-sky-600 hover:bg-sky-500 text-white p-2 rounded transition" title="Ver Ticket">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
                                     </button>
+                                    @endcan
 
                                     @if($venta->estado === 'Completado')
+                                        @can('Eliminar venta')
                                         <form action="{{ route('admin.ventas.destroy', $venta->id) }}" method="POST" id="miFormulario{{ $venta->id }}" class="inline">
                                             @csrf
                                             @method('DELETE')
@@ -198,6 +209,7 @@
                                                 });
                                             }
                                         </script>
+                                        @endcan
                                     @endif
                                 </td>
                             </tr>
@@ -297,29 +309,29 @@
                 </div>
             </div>
 
-            <div x-show="cajaCerradaModal" 
-                 style="display: none;" 
+            <div x-show="cajaCerradaModal"
+                 style="display: none;"
                  class="fixed inset-0 bg-gray-900/75 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-                
+
                 <div class="bg-gray-800 p-6 rounded-lg text-white max-w-sm w-full border border-gray-700 text-center space-y-4 shadow-xl">
                     <div class="text-yellow-500 text-4xl flex justify-center">
                         <svg class="w-12 h-12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
                         </svg>
                     </div>
-                    
+
                     <h3 class="font-bold text-lg">Caja Cerrada</h3>
-                    
+
                     <p class="text-sm text-gray-300">
                         {{ session('mensaje', 'Debes aperturar una caja para realizar ventas.') }}
                     </p>
-                    
+
                     <div class="flex justify-center gap-3 pt-2">
-                        <a href="{{ route('admin.cajas.index') }}" 
+                        <a href="{{ route('admin.cajas.index') }}"
                            class="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded text-sm font-medium transition">
                             Sí, ir a Cajas
                         </a>
-                        <button @click="cajaCerradaModal = false" 
+                        <button @click="cajaCerradaModal = false"
                                 class="bg-gray-600 hover:bg-gray-500 text-white px-4 py-2 rounded text-sm font-medium transition">
                             Cancelar
                         </button>

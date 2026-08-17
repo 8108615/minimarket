@@ -36,16 +36,19 @@
                     <i class="fas fa-exclamation-triangle mr-2"></i> Caja Abierta.
                 </div>
             @else
-                <!-- Botón que abre el Modal de Flux -->
-                <flux:modal.trigger name="abrir-caja-modal">
-                    <flux:button variant="primary" class="bg-blue-500 hover:bg-blue-600 text-white font-semibold cursor-pointer">
-                        <i class="fas fa-plus mr-2"></i> Abrir Caja
-                    </flux:button>
-                </flux:modal.trigger>
+                @can('Guardar caja')
+                    <!-- Botón que abre el Modal de Flux -->
+                    <flux:modal.trigger name="abrir-caja-modal">
+                        <flux:button variant="primary" class="bg-blue-500 hover:bg-blue-600 text-white font-semibold cursor-pointer">
+                            <i class="fas fa-plus mr-2"></i> Abrir Caja
+                        </flux:button>
+                    </flux:modal.trigger>
+                @endcan
             @endif
         </div>
     </div>
 
+    @can('Guardar caja')
     <!-- MODAL PARA ABRIR CAJA -->
     <flux:modal name="abrir-caja-modal" class="md:w-96 space-y-6">
         <div>
@@ -83,6 +86,7 @@
             </div>
         </form>
     </flux:modal>
+    @endcan
 
     @if (request('buscar'))
         <div class="mt-4 p-4 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-lg">
@@ -117,7 +121,7 @@
                         <td class="px-3 py-2 border border-gray-200 dark:border-zinc-700 text-sm font-semibold">{{ $caja->user->name ?? 'N/A' }}</td>
                         <td class="px-3 py-2 border border-gray-200 dark:border-zinc-700 text-sm text-center">{{ $simboloMoneda }} {{ number_format($caja->saldo_inicial, 2) }}</td>
                         <td class="px-3 py-2 border border-gray-200 dark:border-zinc-700 text-sm text-center">
-                            {{ $simboloMoneda }} {{ number_format($caja->saldo_final, 2) }} 
+                            {{ $simboloMoneda }} {{ number_format($caja->saldo_final, 2) }}
                         </td>
                         <td class="px-3 py-2 border border-gray-200 dark:border-zinc-700 text-sm text-center">{{ $caja->fecha_apertura }}</td>
                         <td class="px-3 py-2 border border-gray-200 dark:border-zinc-700 text-sm text-center">{{ $caja->fecha_cierre ?? 'En curso' }}</td>
@@ -128,39 +132,46 @@
                         </td>
                         <td class="px-3 py-2 border border-gray-200 dark:border-zinc-700 text-center">
                             <div class="flex justify-center gap-2 items-center">
+                                @can('Ver datos de la caja')
                                 <a href="{{ route('admin.cajas.show', $caja->id) }}" class="inline-flex items-center px-3 py-1.5 bg-gray-500 hover:bg-gray-600 text-white text-xs font-semibold rounded transition" wire:navigate><i class="fas fa-eye mr-1"></i> Ver</a>
+                                @endcan
 
+                                @can('Ver reporte caja pdf')
                                 <!-- Botón de Imprimir Reporte en el Index -->
                                 <a href="{{ route('admin.cajas.pdf', $caja->id) }}" target="_blank"
                                     class="px-2 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition"
                                     title="Imprimir Reporte PDF">
                                     <i class="fas fa-print"></i>
                                 </a>
+                                @endcan
 
                                 @if($caja->estado == 'abierto')
-                                    <button type="button" onclick="confirmarCierre{{ $caja->id }}()" class="inline-flex items-center px-3 py-1.5 bg-amber-500 hover:bg-amber-600 text-white text-xs font-semibold rounded transition cursor-pointer">
-                                        <i class="fas fa-lock mr-1"></i> Cerrar
-                                    </button>
-                                    <form action="{{ route('admin.cajas.cerrar', $caja->id) }}" method="POST" id="formCerrarCaja{{ $caja->id }}" class="hidden">
-                                        @csrf
-                                    </form>
-                                    <script>
-                                        function confirmarCierre{{ $caja->id }}() {
-                                            Swal.fire({
-                                                title: '¿Deseas cerrar esta caja?',
-                                                text: "Se registrará el cierre de la caja actual.",
-                                                icon: 'question',
-                                                showDenyButton: true,
-                                                confirmButtonText: 'Sí, cerrar',
-                                                confirmButtonColor: '#10b981',
-                                                denyButtonText: 'Cancelar'
-                                            }).then((result) => {
-                                                if (result.isConfirmed) document.getElementById('formCerrarCaja{{ $caja->id }}').submit();
-                                            });
-                                        }
-                                    </script>
+                                    @can('Cerrar caja')
+                                        <button type="button" onclick="confirmarCierre{{ $caja->id }}()" class="inline-flex items-center px-3 py-1.5 bg-amber-500 hover:bg-amber-600 text-white text-xs font-semibold rounded transition cursor-pointer">
+                                            <i class="fas fa-lock mr-1"></i> Cerrar
+                                        </button>
+                                        <form action="{{ route('admin.cajas.cerrar', $caja->id) }}" method="POST" id="formCerrarCaja{{ $caja->id }}" class="hidden">
+                                            @csrf
+                                        </form>
+                                        <script>
+                                            function confirmarCierre{{ $caja->id }}() {
+                                                Swal.fire({
+                                                    title: '¿Deseas cerrar esta caja?',
+                                                    text: "Se registrará el cierre de la caja actual.",
+                                                    icon: 'question',
+                                                    showDenyButton: true,
+                                                    confirmButtonText: 'Sí, cerrar',
+                                                    confirmButtonColor: '#10b981',
+                                                    denyButtonText: 'Cancelar'
+                                                }).then((result) => {
+                                                    if (result.isConfirmed) document.getElementById('formCerrarCaja{{ $caja->id }}').submit();
+                                                });
+                                            }
+                                        </script>
+                                    @endcan
                                 @endif
 
+                                @can('Eliminar caja')
                                 <form action="{{ route('admin.cajas.destroy', $caja->id) }}" method="POST" id="formCaja{{ $caja->id }}">
                                     @csrf @method('DELETE')
                                     <button type="button" class="inline-flex items-center px-3 py-1.5 bg-red-500 hover:bg-red-600 text-white text-xs font-semibold rounded transition cursor-pointer" onclick="confirmarEliminacion{{ $caja->id }}()">
@@ -179,6 +190,7 @@
                                         }).then((result) => { if (result.isConfirmed) document.getElementById('formCaja{{ $caja->id }}').submit(); });
                                     }
                                 </script>
+                                @endcan
                             </div>
                         </td>
                     </tr>

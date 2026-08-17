@@ -26,10 +26,12 @@
         </div>
 
         <div class="flex-1 justify-end flex">
+            @can('Ver formulario de creacion de proveedor')
             <a href="{{ route('admin.proveedores.create') }}"
                 class="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-lg transition flex items-center gap-2">
                 <i class="fas fa-plus mr-2"></i> Crear nuevo
             </a>
+            @endcan
         </div>
     </div>
 
@@ -86,14 +88,21 @@
                         </td>
                         <td class="px-3 py-2 border border-gray-200 dark:border-zinc-700 whitespace-nowrap text-center">
                             <div class="flex justify-center gap-2">
+                                @can('Ver datos del proveedor')
                                 <a href="{{ route('admin.proveedores.show', $proveedor->id) }}"
                                     class="inline-flex items-center px-3 py-1.5 bg-gray-500 hover:bg-gray-600 text-white text-xs font-semibold rounded transition">
                                     <i class="fas fa-eye mr-1"></i> Ver
                                 </a>
+                                @endcan
+
+                                @can('Ver formulario de edicion de proveedor')
                                 <a href="{{ route('admin.proveedores.edit', $proveedor->id) }}"
                                     class="inline-flex items-center px-3 py-1.5 bg-green-500 hover:bg-green-600 text-white text-xs font-semibold rounded transition">
                                     <i class="fas fa-pencil-alt mr-1"></i> Editar
                                 </a>
+                                @endcan
+
+                                @can('Eliminar proveedor')
                                 <form action="{{ route('admin.proveedores.destroy', $proveedor->id) }}" method="POST" id="formProveedor{{ $proveedor->id }}">
                                     @csrf
                                     @method('DELETE')
@@ -122,6 +131,7 @@
                                         });
                                     }
                                 </script>
+                                @endcan
                             </div>
                         </td>
                     </tr>

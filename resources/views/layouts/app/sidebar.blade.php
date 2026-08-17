@@ -12,49 +12,72 @@
 
             <flux:sidebar.nav>
                 <flux:sidebar.group :heading="__('Platform')" class="grid">
-                    <flux:sidebar.item icon="home" :href="route('admin.dashboard')" :current="request()->routeIs('admin.dashboard')" wire:navigate>
-                        Dashboard
-                    </flux:sidebar.item>
 
+
+                        <flux:sidebar.item icon="home" :href="route('admin.dashboard')" :current="request()->routeIs('admin.dashboard')" wire:navigate>
+                            Dashboard
+                        </flux:sidebar.item>
+
+
+                    @can('Ver ajustes')
                     <flux:navlist.item icon="cog-6-tooth" :href="route('admin.ajustes.index')"
                                 :current="request()->routeIs('admin.ajustes.index')" wire:navigate>Ajustes
                     </flux:navlist.item>
+                    @endcan
 
+                    @can('Ver listado de roles')
                     <flux:navlist.item icon="shield-check" :href="route('admin.roles.index')"
                                 :current="request()->routeIs('admin.roles.index')" wire:navigate>Roles
                     </flux:navlist.item>
+                    @endcan
 
+                    @can('Ver listado de usuarios')
                     <flux:navlist.item icon="users" :href="route('admin.usuarios.index')"
                                 :current="request()->routeIs('admin.usuarios.index')" wire:navigate>Usuarios
                     </flux:navlist.item>
+                    @endcan
 
+                    @can('Ver listado de categorias')
                     <flux:navlist.item icon="tag" :href="route('admin.categorias.index')"
                                 :current="request()->routeIs('admin.categorias.*')" wire:navigate>Categorías
                     </flux:navlist.item>
+                    @endcan
 
+                    @can('Ver listado de productos')
                     <flux:navlist.item icon="cube" :href="route('admin.productos.index')"
                                 :current="request()->routeIs('admin.productos.*')" wire:navigate>Productos
                     </flux:navlist.item>
+                    @endcan
 
+                    @can('Ver listado de proveedores')
                     <flux:navlist.item icon="truck" :href="route('admin.proveedores.index')"
                         :current="request()->routeIs('admin.proveedores.*')" wire:navigate>Proveedores
                     </flux:navlist.item>
+                    @endcan
 
+                    @can('Ver listado de clientes')
                     <flux:navlist.item icon="users" :href="route('admin.clientes.index')"
                                 :current="request()->routeIs('admin.clientes.*')" wire:navigate>Clientes
                     </flux:navlist.item>
+                    @endcan
 
+                    @can('Ver listado de compras')
                     <flux:navlist.item icon="shopping-cart" :href="route('admin.compras.index')"
                                 :current="request()->routeIs('admin.compras.*')" wire:navigate>Compras
                     </flux:navlist.item>
+                    @endcan
 
+                    @can('Ver listado de ventas')
                     <flux:navlist.item icon="currency-dollar" :href="route('admin.ventas.index')"
                                 :current="request()->routeIs('admin.ventas.*')" wire:navigate>Ventas
                     </flux:navlist.item>
+                    @endcan
 
+                    @can('Ver listado de cajas')
                     <flux:navlist.item icon="calculator" :href="route('admin.cajas.index')"
                                 :current="request()->routeIs('admin.cajas.*')" wire:navigate>Cajas
                     </flux:navlist.item>
+                    @endcan
 
                 </flux:sidebar.group>
 
@@ -83,7 +106,11 @@
 
             <flux:dropdown position="top" align="end">
                 <flux:profile
-                    :initials="auth()->user()->initials()"
+                    @if(auth()->user()->foto_perfil)
+                        avatar="{{ asset('storage/' . auth()->user()->foto_perfil) }}"
+                    @else
+                        :initials="auth()->user()->initials()"
+                    @endif
                     icon-trailing="chevron-down"
                 />
 
@@ -93,7 +120,11 @@
                             <div class="flex items-center gap-2 px-1 py-1.5 text-start text-sm">
                                 <flux:avatar
                                     :name="auth()->user()->name"
-                                    :initials="auth()->user()->initials()"
+                                    @if(auth()->user()->foto_perfil)
+                                        src="{{ asset('storage/' . auth()->user()->foto_perfil) }}"
+                                    @else
+                                        :initials="auth()->user()->initials()"
+                                    @endif
                                 />
 
                                 <div class="grid flex-1 text-start text-sm leading-tight">

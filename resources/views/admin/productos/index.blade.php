@@ -5,7 +5,6 @@
         <flux:separator variant="subtle" />
     </div>
 
-    <!-- ... (Toda tu parte de buscador y botones está perfecta) ... -->
     <div class="flex gap-4">
         <div class="flex-1">
             <form action="{{ route('admin.productos.index') }}" method="GET" class="flex gap-2 w-1/2">
@@ -27,29 +26,36 @@
         </div>
 
         <div class="flex-1 justify-end flex gap-2">
-            <!-- Botón Imprimir Códigos de Barra -->
+            @can('Imprimir codigos de barras')
             <a href="{{ route('admin.productos.barras') }}" target="_blank"
                 class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg transition flex items-center gap-2">
                 <i class="fas fa-barcode"></i> Códigos de Barra
             </a>
+            @endcan
+
+            @can('Exportar productos excel')
             <a href="{{ route('admin.productos.excel') }}"
                 class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-lg transition flex items-center gap-2">
                 <i class="fas fa-file-excel"></i> Excel
             </a>
+            @endcan
 
-            <!-- Botón PDF -->
+            @can('Exportar productos pdf')
             <a href="{{ route('admin.productos.pdf') }}"
                 class="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white font-semibold rounded-lg transition flex items-center gap-2">
                 <i class="fas fa-file-pdf"></i> PDF
             </a>
+            @endcan
+
+            @can('Ver formulario de creacion de producto')
             <a href="{{ route('admin.productos.create') }}"
                 class="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-lg transition flex items-center gap-2">
                 <i class="fas fa-plus mr-2"></i> Crear nuevo
             </a>
+            @endcan
         </div>
     </div>
 
-    {{-- NUEVO: Panel de Alertas de Stock --}}
     @if(isset($productosCriticos) && $productosCriticos->count() > 0)
         <div class="mt-6 p-4 bg-red-50 border-l-4 border-red-500 rounded-lg shadow-sm">
             <div class="flex items-center">
@@ -78,7 +84,6 @@
 
     <div class="overflow-x-auto rounded-lg border border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 mt-6">
         <table class="min-w-full border-collapse">
-            <!-- ... (Tu tabla está correcta) ... -->
             <thead class="bg-gray-50 dark:bg-zinc-900 text-center">
                 <tr>
                     <th class="px-4 py-3 border-x border-b border-gray-200 dark:border-zinc-700 text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider">Nro</th>
@@ -117,9 +122,19 @@
                         </td>
                         <td class="px-3 py-2 border border-gray-200 dark:border-zinc-700 text-center">
                             <div class="flex justify-center gap-2">
+                                @can('Ver datos del producto')
                                 <a href="{{ route('admin.productos.show', $producto->id) }}" class="px-3 py-1.5 bg-gray-500 hover:bg-gray-600 text-white text-xs font-semibold rounded transition"><i class="fas fa-eye"></i></a>
+                                @endcan
+
+                                @can('Ajustar stock de producto')
                                 <button type="button" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded transition" onclick="abrirModalStock({{ $producto->id }}, '{{ $producto->nombre }}', {{ $producto->stock }})"><i class="fas fa-boxes"></i></button>
+                                @endcan
+
+                                @can('Ver formulario de edicion de producto')
                                 <a href="{{ route('admin.productos.edit', $producto->id) }}" class="px-3 py-1.5 bg-green-500 hover:bg-green-600 text-white text-xs font-semibold rounded transition"><i class="fas fa-pencil-alt"></i></a>
+                                @endcan
+
+                                @can('Eliminar producto')
                                 <form action="{{ url('/admin/producto/' . $producto->id) }}" method="post" id="formProducto{{ $producto->id }}">
                                     @csrf @method('DELETE')
                                     <button type="button" class="px-3 py-1.5 bg-red-500 hover:bg-red-600 text-white text-xs font-semibold rounded transition" onclick="confirmarEliminacionProducto{{ $producto->id }}(event)"><i class="fas fa-trash-alt"></i></button>
@@ -136,6 +151,7 @@
                                         }).then((res) => { if(res.isConfirmed) document.getElementById('formProducto{{ $producto->id }}').submit() })
                                     }
                                 </script>
+                                @endcan
                             </div>
                         </td>
                     </tr>
@@ -146,7 +162,6 @@
         </table>
     </div>
 
-    <!-- NUEVO: Script para notificaciones flash de Laravel -->
     <script>
         @if(session('success') || session('error'))
             Swal.fire({
@@ -182,7 +197,6 @@
                     const form = document.createElement('form');
                     form.method = 'POST';
                     form.action = "{{ url('admin/productos') }}/" + idProducto + "/ajustar-stock";
-
                     const inputs = [
                         {name: '_token', value: '{{ csrf_token() }}'},
                         {name: 'tipo_movimiento', value: result.value.tipo},

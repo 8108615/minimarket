@@ -143,9 +143,13 @@
                         <i class="fas fa-times mr-2"></i>
                         Cancelar
                     </a>
+
+                    {{-- Solo se muestra el botón Guardar si el usuario tiene permiso para actualizar ajustes --}}
+                    @can('Actualizar ajustes')
                     <flux:button variant="primary" type="submit" class="px-5 cursor-pointer" color="blue">
                         <i class="fas fa-save mr-2"></i> Guardar
                     </flux:button>
+                    @endcan
 
                 </div>
             </div>

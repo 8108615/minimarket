@@ -26,18 +26,26 @@
         </div>
 
         <div class="flex-1 justify-end flex gap-2">
+            @can('Ver compras excel')
             <a href="{{ route('admin.compras.excel') }}"
                 class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-lg transition flex items-center gap-2">
                 <i class="fas fa-file-excel"></i> Excel
             </a>
+            @endcan
+
+            @can('Ver compras pdf')
             <a href="{{ route('admin.compras.pdf') }}"
                 class="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white font-semibold rounded-lg transition flex items-center gap-2">
                 <i class="fas fa-file-pdf"></i> PDF
             </a>
+            @endcan
+
+            @can('Ver formulario de creacion de compra')
             <a href="{{ route('admin.compras.create') }}"
                 class="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-lg transition flex items-center gap-2">
                 <i class="fas fa-plus mr-2"></i> Registrar Compra
             </a>
+            @endcan
         </div>
     </div>
 
@@ -73,7 +81,7 @@
                 @forelse ($compras as $compra)
                     <tr class="hover:bg-gray-50 dark:hover:bg-zinc-700/50 transition">
                         <td class="px-3 py-3 border border-gray-200 dark:border-zinc-700 text-sm text-center align-middle">{{ $loop->iteration }}</td>
-                        
+
                         <td class="px-3 py-3 border border-gray-200 dark:border-zinc-700 text-sm text-center font-semibold align-middle">
                             {{ $compra->proveedor->nombre ?? 'Sin proveedor' }}
                         </td>
@@ -128,12 +136,14 @@
 
                         <td class="px-3 py-3 border border-gray-200 dark:border-zinc-700 text-center align-middle">
                             <div class="flex justify-center gap-2">
-                                
+                                @can('Ver detalle de compra')
                                 <a href="{{ route('admin.compras.show', $compra->id) }}" class="px-3 py-1.5 bg-gray-500 hover:bg-gray-600 text-white text-xs font-semibold rounded transition"><i class="fas fa-eye"></i></a>
-                                
+
                                 <a href="{{ route('admin.compras.show', $compra->id) }}?print=true" target="_blank" title="Imprimir Compra" class="px-3 py-1.5 bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-semibold rounded transition"><i class="fas fa-print"></i></a>
-                                
+                                @endcan
+
                                 @if($compra->estado != 'Anulado')
+                                    @can('Eliminar compra')
                                     <form action="{{ route('admin.compras.destroy', $compra->id) }}" method="post" id="formCompra{{ $compra->id }}">
                                         @csrf @method('DELETE')
                                         <button type="button" class="px-3 py-1.5 bg-red-500 hover:bg-red-600 text-white text-xs font-semibold rounded transition" onclick="confirmarAnulacionCompra{{ $compra->id }}(event)"><i class="fas fa-ban"></i></button>
@@ -151,6 +161,7 @@
                                             }).then((res) => { if(res.isConfirmed) document.getElementById('formCompra{{ $compra->id }}').submit() })
                                         }
                                     </script>
+                                    @endcan
                                 @endif
                             </div>
                         </td>

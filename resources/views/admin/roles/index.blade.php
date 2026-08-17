@@ -24,11 +24,13 @@
             </form>
         </div>
         <div class="flex-1 justify-end flex">
+            {{-- Solo se muestra si tiene permiso para ver el formulario de creación de rol --}}
+            @can('Ver formulario de creacion de rol')
             <a href="{{ url('/admin/roles/create') }}"
                 class="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-lg transition flex items-center gap-2">
                 <i class="fas fa-plus mr-2"></i> Crear nuevo
             </a>
-
+            @endcan
         </div>
     </div>
 
@@ -73,21 +75,32 @@
                         <td class="px-3 py-2 border border-gray-200 dark:border-zinc-700 whitespace-nowrap text-center">
                             <div class="flex justify-center gap-2">
 
+                                {{-- Botón Ver --}}
+                                @can('Ver datos del rol')
                                 <a href="{{ url('/admin/rol/' . $rol->id) }}"
                                     class="inline-flex items-center px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white text-xs font-semibold rounded transition">
                                     <i class="fas fa-eye mr-2"></i> Ver
                                 </a>
+                                @endcan
 
+                                {{-- Botón Permisos --}}
+                                @can('Ver formulario de permisos del rol')
                                 <a href="{{ url('/admin/rol/' . $rol->id . '/permisos') }}"
                                     class="inline-flex items-center px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white text-xs font-semibold rounded transition">
                                     <i class="fas fa-shield-alt mr-2"></i> Permisos
                                 </a>
+                                @endcan
 
+                                {{-- Botón Editar --}}
+                                @can('Ver formulario de edicion del rol')
                                 <a href="{{ url('/admin/rol/' . $rol->id . '/edit') }}"
                                     class="inline-flex items-center px-4 py-2 bg-green-500 hover:bg-green-600 text-white text-xs font-semibold rounded transition">
                                     <i class="fas fa-pencil-alt mr-2"></i> Editar
                                 </a>
+                                @endcan
 
+                                {{-- Botón Eliminar --}}
+                                @can('Eliminar rol')
                                 <form action="{{ url('/admin/rol/' . $rol->id) }}" method="post"
                                     id="miFormulario{{ $rol->id }}">
                                     @csrf
@@ -119,6 +132,8 @@
                                         });
                                     }
                                 </script>
+                                @endcan
+
                             </div>
                         </td>
                     </tr>

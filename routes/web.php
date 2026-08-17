@@ -4,9 +4,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::view('/', 'welcome')->name('home');
 
-Route::middleware(['auth', 'verified'])->group(function () {
-    Route::view('dashboard', 'dashboard')->name('dashboard');
-});
+
 
 // Rutas para ajustes
 Route::get('/admin/ajustes', [App\Http\Controllers\AjusteController::class, 'index'])->name('admin.ajustes.index')->middleware(['auth', 'can:Ver ajustes']);
@@ -106,6 +104,6 @@ Route::post('/admin/cajas/abrir', [App\Http\Controllers\CajaController::class, '
 Route::get('cajas/{id}/pdf', [App\Http\Controllers\CajaController::class, 'pdf'])->name('admin.cajas.pdf')->middleware(['auth', 'can:Ver reporte caja pdf']);
 Route::post('/admin/cajas/cerrar/{id}', [App\Http\Controllers\CajaController::class, 'cerrarCaja'])->name('admin.cajas.cerrar')->middleware(['auth', 'can:Cerrar caja']);
 
-Route::get('/dashboard', [App\Http\Controllers\DashboardController::class, 'index'])->name('admin.dashboard')->middleware(['auth', 'can:Ver dashboard']);
+Route::get('/dashboard', [App\Http\Controllers\DashboardController::class, 'index'])->name('admin.dashboard')->middleware('auth');
 
 require __DIR__.'/settings.php';

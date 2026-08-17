@@ -29,6 +29,38 @@ class FortifyServiceProvider extends ServiceProvider
         $this->configureActions();
         $this->configureViews();
         $this->configureRateLimiting();
+
+        // 🟢 Redirección inteligente basada en permisos tras el login
+        Fortify::redirects('login', function (Request $request) {
+            $user = auth()->user();
+
+            if (!$user) {
+                return route('login');
+            }
+
+            // Si tiene permiso para el dashboard, lo mandamos ahí
+            if ($user->can('Ver dashboard')) {
+                return route('admin.dashboard');
+            }
+
+            // Si no tiene dashboard, lo redirigimos al primer módulo al que sí tenga acceso
+            if ($user->can('Ver listado de categorias')) {
+                return route('admin.categorias.index');
+            }
+            if ($user->can('Ver listado de productos')) {
+                return route('admin.productos.index');
+            }
+            if ($user->can('Ver listado de ventas')) {
+                return route('admin.ventas.index');
+            }
+            if ($user->can('Ver listado de usuarios')) {
+                return route('admin.usuarios.index');
+            }
+
+            // Si no tiene ningún permiso configurado, cerramos sesión por seguridad
+            auth()->logout();
+            return route('login');
+        });
     }
 
     /**
