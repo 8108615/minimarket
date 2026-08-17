@@ -90,34 +90,41 @@ class RoleController extends Controller
             ->with('icono', 'success');
     }
 
-    /**public function permisos(string $id)
+    public function permisos(string $id)
     {
-        $rol = Role::find($id);
+        $rol = Role::findOrFail($id);
 
-        // Obtenemos todos los permisos y los agrupamos por su módulo (ej: usuarios, roles, empleados)
-        // Tomando como base el formato de nombre: admin.modulo.accion
+        // Agrupamos los permisos por el módulo al que pertenecen según su nombre o texto descriptivo
         $permisos = Permission::all()->groupBy(function($permission) {
-            $parts = explode('.', $permission->name);
-            // Si tiene al menos 3 partes (ej. admin.usuarios.index), agrupa por la segunda parte.
-            // Si no, los agrupa bajo 'general' u otro nombre.
-            return isset($parts[1]) ? ucfirst($parts[1]) : 'General';
+            $nombre = strtolower($permission->name);
+
+            if (str_contains($nombre, 'rol')) return 'ROLES';
+            if (str_contains($nombre, 'usuario')) return 'USUARIOS';
+            if (str_contains($nombre, 'categoria')) return 'CATEGORIAS';
+            if (str_contains($nombre, 'producto') || str_contains($nombre, 'stock') || str_contains($nombre, 'barras')) return 'PRODUCTOS';
+            if (str_contains($nombre, 'proveedor')) return 'PROVEEDORES';
+            if (str_contains($nombre, 'cliente')) return 'CLIENTES';
+            if (str_contains($nombre, 'compra')) return 'COMPRAS';
+            if (str_contains($nombre, 'venta') || str_contains($nombre, 'ticket')) return 'VENTAS';
+            if (str_contains($nombre, 'caja')) return 'CAJAS';
+            if (str_contains($nombre, 'ajuste')) return 'AJUSTES';
+            if (str_contains($nombre, 'dashboard')) return 'DASHBOARD';
+
+            return 'GENERAL';
         });
 
         return view('admin.roles.permisos', compact('rol', 'permisos'));
     }
 
-
-     * Guardar los permisos asignados al rol.
-
     public function guardarPermisos(Request $request, string $id)
     {
-        $rol = Role::find($id);
+        $rol = Role::findOrFail($id);
 
-        // Sincroniza los permisos seleccionados (espera un array de nombres de permisos)
+        // Sincroniza los permisos seleccionados del formulario
         $rol->syncPermissions($request->input('permisos', []));
 
         return redirect()->route('admin.roles.index')
             ->with('mensaje', 'Permisos asignados correctamente')
             ->with('icono', 'success');
-    }*/
+    }
 }
