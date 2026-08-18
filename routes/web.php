@@ -1,8 +1,13 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
-Route::view('/', 'welcome')->name('home');
+
+Route::get('/', function () {
+    return redirect()->route('login');
+})->name('home');
 
 
 
@@ -105,5 +110,15 @@ Route::get('cajas/{id}/pdf', [App\Http\Controllers\CajaController::class, 'pdf']
 Route::post('/admin/cajas/cerrar/{id}', [App\Http\Controllers\CajaController::class, 'cerrarCaja'])->name('admin.cajas.cerrar')->middleware(['auth', 'can:Cerrar caja']);
 
 Route::get('/dashboard', [App\Http\Controllers\DashboardController::class, 'index'])->name('admin.dashboard')->middleware('auth');
+
+// Ruta personalizada y directa para cerrar sesión y enviar al Login
+Route::post('/logout-personalizado', function (Request $request) {
+    Auth::guard('web')->logout();
+
+    $request->session()->invalidate();
+    $request->session()->regenerateToken();
+
+    return redirect()->route('login');
+})->name('logout.personalizado');
 
 require __DIR__.'/settings.php';

@@ -30,6 +30,9 @@ class FortifyServiceProvider extends ServiceProvider
         $this->configureViews();
         $this->configureRateLimiting();
 
+        // 🟢 Redirección para el Cierre de Sesión (Logout)
+        Fortify::redirects('logout', fn () => route('login'));
+
         // 🟢 Redirección inteligente basada en permisos tras el login
         Fortify::redirects('login', function (Request $request) {
             $user = auth()->user();
