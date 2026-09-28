@@ -10,6 +10,7 @@ use Illuminate\Validation\Rules\Password;
 use App\Models\Ajuste;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Artisan;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -26,6 +27,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        Artisan::call('migrate', ['--force' => true]);
         View::composer('*', function ($view) {
             $ajuste = Ajuste::first();
             $simbolo = '$'; // Valor por defecto
