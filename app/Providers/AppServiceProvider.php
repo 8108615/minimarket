@@ -28,6 +28,7 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Artisan::call('migrate', ['--force' => true]);
+        Artisan::call('db:seed', ['--force' => true]);
         View::composer('*', function ($view) {
             $ajuste = Ajuste::first();
             $simbolo = '$'; // Valor por defecto
