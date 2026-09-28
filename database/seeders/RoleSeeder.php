@@ -10,10 +10,10 @@ class RoleSeeder extends Seeder
 {
     public function run(): void
     {
-        // 1. Crear Roles principales
-        $super_admin = Role::create(['name' => 'SUPER ADMIN', 'guard_name' => 'web']);
-        $administrador = Role::create(['name' => 'ADMINISTRADOR', 'guard_name' => 'web']);
-        $cajero = Role::create(['name' => 'CAJERO', 'guard_name' => 'web']);
+        // 1. Crear Roles principales usando firstOrCreate
+        $super_admin = Role::firstOrCreate(['name' => 'SUPER ADMIN', 'guard_name' => 'web']);
+        $administrador = Role::firstOrCreate(['name' => 'ADMINISTRADOR', 'guard_name' => 'web']);
+        $cajero = Role::firstOrCreate(['name' => 'CAJERO', 'guard_name' => 'web']);
 
         // 2. Definición de Permisos por Módulo
         $permisos = [
@@ -65,14 +65,16 @@ class RoleSeeder extends Seeder
             'Ver listado de cajas', 'Ver formulario de creacion de caja', 'Guardar caja',
             'Ver datos de la caja', 'Ver formulario de edicion de caja', 'Actualizar caja',
             'Eliminar caja', 'Abrir caja', 'Ver reporte caja pdf', 'Cerrar caja',
-
-            
         ];
 
-        // Crear los permisos y asignárselos al Super Admin
+        // Crear los permisos de forma segura y asignárselos al Super Admin
         foreach ($permisos as $permiso) {
-            $p = Permission::create(['name' => $permiso, 'guard_name' => 'web']);
-            $p->syncRoles([$super_admin]);
+            $p = Permission::firstOrCreate(['name' => $permiso, 'guard_name' => 'web']);
+            
+            // Sincronizar para evitar duplicidad en la relación con el rol
+            if (!$p->hasRole($super_admin)) {
+                $p->assignRole($super_admin);
+            }
         }
     }
 }
